@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Road Map - Crew</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      color: #007bff;
+      background: #000000;
+      position: relative;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background: #000000;
+    }
+    header {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 1.5rem;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .menu-toggle {
+      display: block;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      width: 50px;
+      height: 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 1001;
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      pointer-events: auto;
+    }
+    .menu-toggle span {
+      display: block;
+      width: 30px;
+      height: 3px;
+      background-color: #007bff;
+      transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    }
+    body.menu-closed .menu-toggle span:nth-child(1) {
+      transform: none;
+    }
+    body.menu-closed .menu-toggle span:nth-child(2) {
+      opacity: 1;
+    }
+    body.menu-closed .menu-toggle span:nth-child(3) {
+      transform: none;
+    }
+    body:not(.menu-closed) .menu-toggle span:nth-child(1) {
+      transform: rotate(-45deg) translate(-5px, 5px);
+    }
+    body:not(.menu-closed) .menu-toggle span:nth-child(2) {
+      opacity: 0;
+    }
+    body:not(.menu-closed) .menu-toggle span:nth-child(3) {
+      transform: rotate(45deg) translate(-5px, -5px);
+    }
+    .pop-out-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 250px;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      padding-top: 80px;
+      transform: translateX(250px);
+      transition: transform 0.3s ease-in-out;
+      z-index: 999;
+      pointer-events: auto;
+    }
+    body:not(.menu-closed) .pop-out-menu {
+      transform: translateX(0);
+    }
+    .pop-out-menu ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 0 1.5rem;
+    }
+    .pop-out-menu a {
+      font-family: 'Orbitron', sans-serif; /* Changed font */
+      color: #ffffff; /* Changed color */
+      text-decoration: none;
+      font-size: 1.5rem;
+      display: block;
+      padding: 0.5rem 0;
+      transition: color 0.3s ease;
+    }
+    .pop-out-menu a:hover {
+      color: #00c6ff;
+    }
+    .pop-out-menu a.active {
+      color: #00c6ff;
+    }
+    nav ul {
+      display: none;
+    }
+    main {
+      max-width: 1400px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    .projects h1 {
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+      color: #ffffff; /* Changed color to white */
+    }
+    .projects p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+      font-size: 1rem;
+      color: #007bff;
+    }
+    .social-links {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      gap: 15px;
+      z-index: 2;
+    }
+    .social-links a {
+      opacity: 0.8;
+      transition: opacity 0.3s;
+    }
+    .social-links a:hover {
+      opacity: 1;
+    }
+    .social-links img {
+      width: 32px;
+      height: 32px;
+      filter: brightness(0) saturate(100%) hue-rotate(200deg); /* Adjust to match #007bff */
+    }
+  </style>
+</head>
+<body class="menu-closed">
+  <canvas id="canvas"></canvas>
+
+  <div class="pop-out-menu">
+    <ul>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/about.html">About us</a></li>
+      <li><a href="/join.html">Join a Crew</a></li>
+      <li><a href="/dream.html">Dream</a></li>
+      <li><a href="/revive.html">Revive</a></li>
+      <li><a href="/tokenomics.html" class="active">Road Map</a></li>
+    </ul>
+  </div>
+
+  <header>
+    <nav>
+      <div class="logo">Crew</div>
+      <button class="menu-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul>
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/about.html">About us</a></li>
+        <li><a href="/join.html">Join a Crew</a></li>
+        <li><a href="/dream.html">Dream</a></li>
+        <li><a href="/revive.html">Revive</a></li>
+        <li><a href="/tokenomics.html" class="active">Road Map</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="projects">
+      <h1>Road Map</h1>
+      <p>
+        CREW Tokenomics Whitepaper<br>
+        Executive Summary<br>
+        The CREW token powers a dynamic ecosystem designed to foster decentralized innovation, reward community engagement, and support the launch of partner projects. With a carefully structured tokenomics model, CREW balances growth, sustainability, and value creation through strategic allocations, vesting schedules, and deflationary mechanisms. Key features include a team-aligned purchase model, a robust treasury for ecosystem investments, and a buyback-and-burn program to enhance token scarcity. This whitepaper outlines the CREW tokenomics, emphasizing transparency, long-term incentives, and investor confidence.<br>
+        <br>
+        1. Token Overview<br>
+        Token Name: CREW<br>
+        Total Supply: [To be specified by the project, e.g., 1,000,000,000 CREW]<br>
+        Purpose: Drive ecosystem participation, fund partner token launches, and incentivize community engagement.<br>
+        Utility:<br>
+        Governance: Vote on treasury disbursements and platform upgrades.<br>
+        Staking: Earn rewards for locking CREW tokens, supporting network stability.<br>
+        Premium Access: Unlock exclusive features, such as early access to partner token sales.<br>
+        Partner Token Access: Use CREW to participate in launches hosted on the platform.<br>
+        2. Initial Allocation and Team Purchase<br>
+        The CREW team will purchase 10% of the total token supply at launch to align incentives with the community. This allocation is subject to:<br>
+        <br>
+        Lockup Period: 100% locked for 3 months post-launch to demonstrate long-term commitment.<br>
+        Vesting Schedule: Post-lockup, 0.5% of the team’s allocation (5% of the 10%) unlocks biweekly over approximately 20 months.<br>
+        Allocation of Unlocked Tokens:<br>
+        50% to CREW Treasury: Funds investments in partner token launches and ecosystem liquidity.<br>
+        25% to Top Users/Holders: Rewards for active participants and long-term holders, distributed via staking or engagement metrics.<br>
+        25% to Operational Costs: Supports platform development, marketing, and partnerships.<br>
+        3. CREW Matching Mechanism<br>
+        To reward the team for a successful launch, CREW will match the team’s purchase up to 5% of the total supply. This allocation is subject to:<br>
+        <br>
+        Lockup Period: 100% locked for 2 months post-launch.<br>
+        Vesting Schedule: Post-lockup, tokens vest linearly over 4 weeks (1.25% of the matched allocation per week).<br>
+        Purpose: Incentivizes team performance while ensuring alignment with ecosystem goals.
+      </p>
+    </section>
+  </main>
+
+  <div class="social-links">
+    <a href="https://x.com/crew" target="_blank">
+      <img src="https://img.icons8.com/ios-filled/50/ffffff/x.png" alt="X Logo">
+    </a>
+    <a href="https://github.com/crew" target="_blank">
+      <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub Logo">
+    </a>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const lines = [];
+    const numLines = 15;
+    const numVerticalLines = 10;
+
+    class Line {
+      constructor(orientation = 'horizontal') {
+        this.orientation = orientation;
+        this.opacity = Math.random() * 0.3 + 0.2;
+
+        if (this.orientation === 'horizontal') {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.length = Math.random() * 100 + 50;
+          this.speed = Math.random() * 2 + 1;
+          this.color = `rgba(0, 123, 255, ${this.opacity})`;
+        } else {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.length = Math.random() * 100 + 50;
+          this.speed = Math.random() * 1.5 + 0.5;
+          this.color = `rgba(0, 123, 255, ${this.opacity})`;
+        }
+      }
+
+      update() {
+        if (this.orientation === 'horizontal') {
+          this.x += this.speed;
+          if (this.x > canvas.width + this.length) {
+            this.x = -this.length;
+            this.y = Math.random() * canvas.height;
+          }
+        } else {
+          this.y += this.speed;
+          if (this.y > canvas.height + this.length) {
+            this.y = -this.length;
+            this.x = Math.random() * canvas.width;
+          }
+        }
+      }
+
+      draw() {
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        if (this.orientation === 'horizontal') {
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(this.x + this.length, this.y);
+        } else {
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(this.x, this.y + this.length);
+        }
+        ctx.stroke();
+      }
+    }
+
+    function init() {
+      lines.length = 0;
+      for (let i = 0; i < numLines; i++) {
+        lines.push(new Line('horizontal'));
+      }
+      for (let i = 0; i < numVerticalLines; i++) {
+        lines.push(new Line('vertical'));
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      lines.forEach(line => {
+        line.update();
+        line.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+
+    init();
+    animate();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      init();
+    });
+
+    const menuToggle = document.querySelector('.menu-toggle');
+    const body = document.body;
+    const popOutMenu = document.querySelector('.pop-out-menu');
+    let closeTimeout;
+    const closeDelay = 300; // milliseconds - adjust as needed
+
+    if (menuToggle && popOutMenu) {
+      const openMenu = () => {
+        clearTimeout(closeTimeout);
+        body.classList.remove('menu-closed');
+        console.log('Menu opened');
+      };
+
+      const closeMenu = () => {
+        closeTimeout = setTimeout(() => {
+          body.classList.add('menu-closed');
+          console.log('Menu closed after delay');
+        }, closeDelay);
+      };
+
+      // Open menu on hover over menu-toggle
+      menuToggle.addEventListener('mouseenter', openMenu);
+      // Set timeout to close menu when leaving menu-toggle
+      menuToggle.addEventListener('mouseleave', closeMenu);
+
+      // Keep menu open when hovering over pop-out-menu
+      popOutMenu.addEventListener('mouseenter', openMenu);
+      // Set timeout to close menu when leaving pop-out-menu
+      popOutMenu.addEventListener('mouseleave', closeMenu);
+
+      // Close menu when clicking a menu link (for accessibility)
+      popOutMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          // e.stopPropagation(); // May not be needed with fixed positioning
+          body.classList.add('menu-closed');
+          console.log('Menu link clicked, menu closed');
+        });
+      });
+
+      // Initial state
+      body.classList.add('menu-closed'); // Ensure it starts closed
+      console.log('Initial state: menu-closed added');
+
+    } else {
+      console.error('Menu toggle or pop-out menu not found!');
+    }
+  </script>
+</body>
+</html>

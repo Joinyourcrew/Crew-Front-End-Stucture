@@ -1,0 +1,211 @@
+/* Basic Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+  line-height: 1.6;
+  color: #007bff; /* Changed from #333 */
+  background-color: #000000; /* Changed from #f4f4f4 */
+  padding-top: 60px; /* Space for fixed header */
+}
+
+header {
+  background: #000000; /* Changed from #333 */
+  color: #007bff; /* Changed from #fff */
+  padding: 10px 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+header nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.logo {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #007bff; /* Changed from #fff */
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+}
+
+nav ul li {
+  margin-left: 20px;
+}
+
+nav ul li a {
+  color: #007bff; /* Changed from #fff */
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+nav ul li a:hover {
+  color: #00c6ff; /* Adjusted hover color */
+}
+
+main {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+section {
+  background: #000000; /* Changed from #fff */
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hero {
+  text-align: center;
+  padding: 50px 20px;
+  background: linear-gradient(to right, #007bff, #00c6ff);
+  color: #007bff; /* Changed from #fff */
+  border-radius: 8px;
+}
+
+.hero h1 {
+  margin-bottom: 10px;
+  font-size: 2.5em;
+  color: #007bff; /* Changed from #fff */
+}
+
+.hero p {
+  margin-bottom: 20px;
+  font-size: 1.2em;
+}
+
+.cta-button {
+  display: inline-block;
+  background: #007bff; /* Changed from #fff */
+  color: #000000; /* Changed from #007bff */
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.cta-button:hover {
+  background: #0056b3; /* Adjusted hover color */
+  color: #007bff; /* Adjusted hover color */
+}
+
+.overview h2 {
+  margin-bottom: 15px;
+  color: #007bff;
+}
+
+#token-stats {
+  margin-top: 15px;
+  font-style: italic;
+  color: #007bff; /* Changed from #555 */
+}
+
+/* Projects Page Tabs */
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #007bff; /* Changed from #eee */
+}
+
+.tab {
+  padding: 10px 15px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 1em;
+  transition: color 0.3s ease;
+  color: #007bff; /* Ensure tabs are blue */
+}
+
+.tab:hover {
+  color: #00c6ff; /* Adjusted hover color */
+}
+
+.tab.active {
+  color: #000000; /* Changed from #007bff */
+  background: #007bff; /* Changed from none */
+  border-bottom: 2px solid #007bff; /* Keep active border */
+  font-weight: bold;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Apply Page Form */
+#apply-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #007bff; /* Ensure labels are blue */
+}
+
+#apply-form input[type="text"],
+#apply-form select,
+#apply-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #007bff; /* Changed from #ccc */
+  border-radius: 4px;
+  background-color: #333; /* Keep dark background for input */
+  color: #007bff; /* Ensure input text is blue */
+}
+
+#apply-form small {
+  display: block;
+  margin-top: -10px;
+  margin-bottom: 15px;
+  color: #007bff; /* Changed from #666 */
+  font-size: 0.9em;
+}
+
+#apply-form button[type="submit"] {
+  display: inline-block;
+  background: #007bff;
+  color: #000000; /* Changed from #fff */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#apply-form button[type="submit"]:hover {
+  background: #0056b3; /* Adjusted hover color */
+  color: #007bff; /* Adjusted hover color */
+}
+
+
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 20px;
+  background: #000000; /* Changed from #333 */
+  color: #007bff; /* Changed from #fff */
+  border-radius: 8px;
+}

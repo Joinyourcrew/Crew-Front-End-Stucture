@@ -1,0 +1,70 @@
+---
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Landing page for Crew web app" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>
+<style is:global>
+	:root {
+		/* Define a more blue color */
+		--light-blue: 100, 149, 237; /* RGB for Cornflower Blue */
+	}
+	html {
+		font-family: system-ui, sans-serif;
+		/* Set darker background, closer to black */
+		/* Using a very dark color as a base */
+		background: #0a0a0a; /* A very dark grey, close to black */
+		/* If you have a black sand image (e.g., in public/images/black-sand.jpg), you can use: */
+		/* background: url('/images/black-sand.jpg') no-repeat center center fixed; */
+		/* background-size: cover; */
+		/* background-color: #0a0a0a; /* Fallback color */
+
+		/* Set default text color to light blue */
+		color: rgb(var(--light-blue));
+    height: 100%; /* Ensure html takes full height */
+	}
+  body {
+    margin: 0;
+    overflow: hidden; /* Hide scrollbars */
+    background: #000; /* Pure black background */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensure body takes at least full viewport height */
+  }
+	code {
+		font-family:
+			Menlo,
+			Monaco,
+			Lucida Console,
+			Liberation Mono,
+			DejaVu Sans Mono,
+			Bitstream Vera Sans Mono,
+			Courier New,
+			monospace;
+	}
+
+  /* Style for the canvas background */
+  canvas {
+      display: block;
+      position: fixed; /* Use fixed to cover the entire viewport */
+      top: 0;
+      left: 0;
+      z-index: -1; /* Place behind content */
+  }
+</style>

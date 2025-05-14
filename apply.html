@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply to Crew</title>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="logo">Crew</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="apply.html">Apply/Start Project</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Apply to Join or Start a Crew Project</h1>
+    <p>Fill out the form below to apply to join an existing crew or propose a new project.</p>
+
+    <form id="apply-form">
+      <label for="x-account">X (Twitter) Account:</label>
+      <input type="text" id="x-account" name="x-account" required>
+      <small>Must be at least 1 month old.</small>
+
+      <label for="role">Desired Role (if joining):</label>
+      <input type="text" id="role" name="role">
+      <small>e.g., Developer, Designer, Marketer, Community Manager</small>
+
+      <label for="project-type">Project Type (if starting):</label>
+      <select id="project-type" name="project-type">
+        <option value="">-- Select --</option>
+        <option value="dapp">DApp</option>
+        <option value="tool">Tool/Utility</option>
+        <option value="content">Content/Media</option>
+        <option value="community">Community Initiative</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label for="project-desc">Project Description (if starting):</label>
+      <textarea id="project-desc" name="project-desc" rows="4"></textarea>
+      <small>Briefly describe your project idea.</small>
+
+      <button type="submit">Submit Application</button>
+    </form>
+  </main>
+
+  <footer>
+    <p>Crew</p>
+  </footer>
+
+  <script type="module" src="/src/scripts.js"></script>
+</script>
+</body>
+</html>

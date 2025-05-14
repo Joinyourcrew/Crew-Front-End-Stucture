@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crew Projects</title>
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="logo">Crew</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="apply.html">Apply/Start Project</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Crew Projects</h1>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('active-projects')">Active Projects</button>
+      <button class="tab" onclick="showTab('completed-projects')">Completed Projects</button>
+    </div>
+
+    <div id="active-projects" class="tab-content active">
+      <h2>Active Projects</h2>
+      <p>List of ongoing projects will go here.</p>
+      <!-- Project cards/list -->
+    </div>
+
+    <div id="completed-projects" class="tab-content">
+      <h2>Completed Projects</h2>
+      <p>List of completed projects will go here.</p>
+      <!-- Project cards/list -->
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 Crew</p>
+  </footer>
+
+  <script type="module" src="/src/scripts.js"></script>
+  <script>
+    // Initialize the first tab on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      showTab('active-projects');
+    });
+  </script>
+</body>
+</html>

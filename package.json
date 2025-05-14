@@ -1,0 +1,17 @@
+{
+  "name": "crew-website",
+  "version": "1.0.0",
+  "description": "A platform for building and launching decentralized projects with $CREW token integration.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}
