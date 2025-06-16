@@ -42,7 +42,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Revive - Crew Platform</title>
+  <title>Sign Up - Crew Platform</title>
   <link href="https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -87,23 +87,60 @@
     nav a:hover {
       color: #f60;
     }
-    .revive-section {
+    .signup-section {
+      padding: 60px 20px;
       text-align: center;
-      padding: 100px 20px;
-    }
-    .revive-section .title-container {
+      min-height: calc(100vh - 140px);
       display: flex;
+      flex-direction: column;
       justify-content: center;
+    }
+    .signup-form {
+      max-width: 400px;
+      margin: 0 auto;
+      background: #111;
+      padding: 30px;
+      border: 2px solid #00f;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
+      transition: transform 0.3s ease;
+    }
+    .signup-form:hover {
+      transform: translateY(-5px);
+    }
+    .signup-form h2 {
+      margin: 0 0 20px;
+      font-size: 2em;
+      color: #f60;
+    }
+    .signup-form button {
+      display: flex;
       align-items: center;
-      gap: 20px;
+      justify-content: center;
+      background: #00f;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 700;
+      width: 100%;
+      transition: background 0.3s, box-shadow 0.3s;
     }
-    .revive-section h1 {
-      font-size: 4em;
-      margin: 0;
+    .signup-form button:hover {
+      background: #0055ff;
+      box-shadow: 0 0 10px rgba(0, 85, 255, 0.7);
     }
-    .revive-section svg {
-      width: 60px;
-      height: 60px;
+    .signup-form button img {
+      width: 20px;
+      margin-right: 10px;
+    }
+    .signup-form .loading {
+      display: none;
+      font-size: 0.9em;
+      color: #f60;
+      margin-top: 10px;
     }
     footer {
       text-align: center;
@@ -156,13 +193,15 @@
       <a href="/signup.html">Sign Up</a>
     </nav>
   </header>
-  <section class="revive-section">
-    <div class="title-container">
-      <h1>Coming Soon</h1>
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 80 L40 20 L60 80 M40 20 L80 40" stroke-width="8" stroke="#f5f5f5" fill="none" stroke-linecap="round"/>
-      </svg>
-    </div>
+  <section class="signup-section">
+    <form class="signup-form" id="signup-form">
+      <h2>Sign Up with X</h2>
+      <button type="submit">
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/x-twitter.svg" alt="X">
+        Connect with X
+      </button>
+      <div class="loading" id="loading">Redirecting...</div>
+    </form>
   </section>
   <footer>
     <div class="social-links">
@@ -171,16 +210,24 @@
     </div>
     © 2025 Crew Platform.
   </footer>
-  <div class="chat-box" onclick="alert('Messages feature coming soon!')">
+  <div class="chat-box" onclick="alert('Messages feature coming soon! Check your wallet details in notifications.')">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#fff">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14h-4.7L12 19.3 8.7 16H4V4h16v12z"/>
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9-2-2-2V4c0-1.1-.9-2-2-2zm0 14h-4.7L12 19.3 8.7 16H4V4h16v12z"/>
     </svg>
     <span class="notification-badge" id="notification-count">0</span>
   </div>
   <script>
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      document.getElementById('loading').style.display = 'block';
+      window.location.href = '/auth/x';
+    });
+
     async function fetchUnreadMessages() {
       try {
-        const response = await fetch('/api/messages/unread');
+        const response = await fetch('/api/messages/unread', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
         const { count } = await response.json();
         document.getElementById('notification-count').textContent = count;
       } catch (error) {

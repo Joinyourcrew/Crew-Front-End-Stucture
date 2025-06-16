@@ -1,0 +1,635 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Crew Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Avenir', sans-serif;
+      background: linear-gradient(135deg, #6a0dad, #00f);
+      background-size: 200% 200%;
+      animation: gradientShift 15s ease infinite;
+      color: #fff;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      background: #000;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+    .logo-container svg {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+    }
+    nav {
+      margin-left: auto;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    nav a:hover {
+      color: #f60;
+    }
+    .chat-section {
+      padding: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 20px;
+    }
+    .chat-container, .checklist-container {
+      background: #111;
+      padding: 20px;
+      border: 2px solid #00f;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #00f;
+      flex: 1;
+    }
+    .chat-container h2, .checklist-container h2 {
+      color: #f60;
+      margin-top: 0;
+    }
+    .project-select {
+      width: 100%;
+      padding: 12px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #00f;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .message-list {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    .message {
+      background: #222;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+    .message.task {
+      border-left: 4px solid #f60;
+    }
+    .message.task.completed {
+      border-left: 4px solid #0f0;
+    }
+    .message strong {
+      color: #f60;
+    }
+    .message-form {
+      display: flex;
+      gap: 10px;
+    }
+    .message-input, .task-assignee {
+      flex: 1;
+      padding: 12px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #00f;
+      border-radius: 10px;
+    }
+    .message-form button {
+      background: #00f;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background 0.3s;
+    }
+    .message-form button:hover {
+      background: #0055ff;
+    }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .checklist-item input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    .checklist-item label {
+      flex: 1;
+    }
+    .checklist-item input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #00f;
+      border-radius: 5px;
+    }
+    .checklist-item button {
+      background: #00f;
+      color: #fff;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .checklist-item button:hover {
+      background: #0055ff;
+    }
+    .checklist-item .greenlight-status {
+      color: #0f0;
+      margin-left: 10px;
+      font-size: 0.9em;
+    }
+    .launch-btn {
+      background: #f60;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 700;
+      width: 100%;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+    .launch-btn:hover {
+      background: #cc5200;
+    }
+    .launch-btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #000;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    .social-links img {
+      width: 30px;
+      margin: 0 10px;
+    }
+    .chat-box {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      cursor: pointer;
+    }
+    .chat-box svg {
+      width: 50px;
+      height: 50px;
+    }
+    .notification-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #f00;
+      color: #fff;
+      border-radius: 50%;
+      padding: 5px 10px;
+      font-size: 0.8em;
+    }
+    .no-access-container {
+      background: #111;
+      padding: 40px;
+      border: 2px solid #00f;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #00f;
+      text-align: center;
+      max-width: 600px;
+      margin: 40px auto;
+    }
+    .no-access-container h2 {
+      color: #f60;
+      margin-bottom: 20px;
+    }
+    .no-access-container p {
+      font-size: 1.1em;
+      margin-bottom: 30px;
+    }
+    .no-access-container a {
+      background: #00f;
+      color: #fff;
+      padding: 12px 20px;
+      margin: 0 10px;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 700;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .no-access-container a:hover {
+      background: #0055ff;
+      box-shadow: 0 0 10px rgba(0, 85, 255, 0.7);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 80 L40 20 L60 80 M40 20 L80 40" stroke-width="8" stroke="#f5f5f5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <h1>CREW</h1>
+    </div>
+    <nav>
+      <a href="/index.html">Home</a>
+      <a href="/top-projects.html">Top Projects</a>
+      <a href="/join.html">Join</a>
+      <a href="/dream.html">Dream</a>
+      <a href="/chat.html">Chat</a>
+      <a href="/revive.html">Revive</a>
+      <a href="/signup.html">Sign Up</a>
+    </nav>
+  </header>
+  <section class="chat-section" id="chat-section" style="display: none;">
+    <div class="chat-container">
+      <h2>Group Chat</h2>
+      <select class="project-select" id="project-select" onchange="loadChat()">
+        <option value="">Select a Project</option>
+      </select>
+      <div class="message-list" id="message-list"></div>
+      <form class="message-form" id="message-form">
+        <input type="text" class="message-input" id="message-input" placeholder="Type a message...">
+        <select class="task-assignee" id="task-assignee">
+          <option value="">No Task</option>
+        </select>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <div class="checklist-container">
+      <h2>Pre-Launch Checklist</h2>
+      <div id="checklist"></div>
+      <button class="launch-btn" id="launch-btn" disabled>Launch Project</button>
+    </div>
+  </section>
+  <div class="no-access-container" id="no-access-container">
+    <h2>Access Chat</h2>
+    <p>Dream or Join a Project to Access Chat</p>
+    <a href="/dream.html">Dream</a>
+    <a href="/join.html">Join a Project</a>
+  </div>
+  <footer>
+    <div class="social-links">
+      <a href="https://x.com"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/x-twitter.svg" alt="X"></a>
+      <a href="https://github.com"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/github.svg" alt="GitHub"></a>
+    </div>
+    © 2025 Crew Platform.
+  </footer>
+  <div class="chat-box" onclick="window.location.href='/chat.html'">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#fff">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9-2-2-2V4c0-1.1-.9-2-2-2zm0 14h-4.7L12 19.3 8.7 16H4V4h16v12z"/>
+    </svg>
+    <span class="notification-badge" id="notification-count">0</span>
+  </div>
+  <script>
+    let currentProjectId = null;
+
+    async function fetchUserProjects() {
+      try {
+        const response = await fetch('/api/projects/user', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch projects');
+        const projects = await response.json();
+        const projectSelect = document.getElementById('project-select');
+        projectSelect.innerHTML = '<option value="">Select a Project</option>' + 
+          projects.map(project => `<option value="${project._id}">${project.name}</option>`).join('');
+        if (projects.length > 0) {
+          projectSelect.value = projects[0]._id;
+          currentProjectId = projects[0]._id;
+          await loadChat();
+        }
+        return projects.length > 0;
+      } catch (error) {
+        console.error('Error fetching user projects:', error);
+        return false;
+      }
+    }
+
+    async function loadChat() {
+      currentProjectId = document.getElementById('project-select').value;
+      if (!currentProjectId) {
+        document.getElementById('message-list').innerHTML = '';
+        document.getElementById('task-assignee').innerHTML = '<option value="">No Task</option>';
+        document.getElementById('checklist').innerHTML = '';
+        document.getElementById('launch-btn').disabled = true;
+        return;
+      }
+      await Promise.all([loadMessages(), loadAssignees(), loadChecklist()]);
+    }
+
+    async function loadMessages() {
+      try {
+        const response = await fetch(`/api/group-messages/${currentProjectId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
+        const messages = await response.json();
+        const messageList = document.getElementById('message-list');
+        messageList.innerHTML = messages.map(msg => `
+          <div class="message ${msg.isTask ? 'task' : ''} ${msg.isTask && msg.completed ? 'completed' : ''}">
+            <strong>@${msg.senderXUsername}</strong>: ${msg.content}
+            ${msg.isTask ? `<br>Assigned to: @${msg.assigneeXUsername} ${msg.completed ? '(Completed)' : ''}` : ''}
+            ${msg.isTask && !msg.completed && msg.assigneeXUsername === localStorage.getItem('xUsername') ? 
+              `<button onclick="markTaskComplete('${msg._id}')">Mark Complete</button>` : ''}
+          </div>
+        `).join('');
+        messageList.scrollTop = messageList.scrollHeight;
+      } catch (error) {
+        console.error('Error loading messages:', error);
+      }
+    }
+
+    async function loadAssignees() {
+      try {
+        const response = await fetch(`/api/projects/${currentProjectId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
+        const project = await response.json();
+        const taskAssignee = document.getElementById('task-assignee');
+        taskAssignee.innerHTML = '<option value="">No Task</option>' + 
+          project.acceptedMembers.concat([{ xUsername: project.creatorXUsername }])
+            .map(member => `<option value="${member.xUsername}">@${member.xUsername}</option>`).join('');
+      } catch (error) {
+        console.error('Error loading assignees:', error);
+      }
+    }
+
+    async function loadChecklist() {
+      try {
+        const response = await fetch(`/api/projects/${currentProjectId}/checklist`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
+        const project = await response.json();
+        const checklist = document.getElementById('checklist');
+        const xUsername = localStorage.getItem('xUsername');
+        checklist.innerHTML = `
+          <div class="checklist-item">
+            <input type="checkbox" id="socials" ${project.checklist.socials.completed ? 'checked' : ''} disabled>
+            <label for="socials">Create Socials</label>
+            ${!project.checklist.socials.completed ? `
+              <input type="text" id="socials-link" placeholder="Enter socials link">
+              <button onclick="submitChecklistLink('socials')">Submit</button>
+            ` : `<span class="greenlight-status"><a href="${project.checklist.socials.link}" target="_blank">Link</a></span>`}
+          </div>
+          <div class="checklist-item">
+            <input type="checkbox" id="github" ${project.checklist.github.completed ? 'checked' : ''} disabled>
+            <label for="github">Create GitHub</label>
+            ${!project.checklist.github.completed ? `
+              <input type="text" id="github-link" placeholder="Enter GitHub link">
+              <button onclick="submitChecklistLink('github')">Submit</button>
+            ` : `<span class="greenlight-status"><a href="${project.checklist.github.link}" target="_blank">Link</a></span>`}
+          </div>
+          <div class="checklist-item">
+            <input type="checkbox" id="reward-fee" ${project.checklist.rewardFee.completed ? 'checked' : ''} disabled>
+            <label for="reward-fee">Finalize Reward Fee Split</label>
+            ${!project.checklist.rewardFee.completed && !project.checklist.rewardFee.greenlights[xUsername] ? `
+              <input type="number" id="reward-fee-share" placeholder="Your % share" min="0" max="100">
+              <button onclick="greenlightRewardFee()">Greenlight</button>
+            ` : `<span class="greenlight-status">${project.checklist.rewardFee.greenlights[xUsername] ? 'Greenlit' : 'Waiting'}</span>`}
+          </div>
+          <div class="checklist-item">
+            <input type="checkbox" id="whitepaper" ${project.checklist.whitepaper.completed ? 'checked' : ''} disabled>
+            <label for="whitepaper">Create Whitepaper</label>
+            ${!project.checklist.whitepaper.completed ? `
+              <input type="text" id="whitepaper-link" placeholder="Enter whitepaper link">
+              <button onclick="submitChecklistLink('whitepaper')">Submit</button>
+            ` : `<span class="greenlight-status"><a href="${project.checklist.whitepaper.link}" target="_blank">Link</a></span>`}
+          </div>
+          <div class="checklist-item">
+            <input type="checkbox" id="tokenomics" ${project.checklist.tokenomics.completed ? 'checked' : ''} disabled>
+            <label for="tokenomics">Define Tokenomics</label>
+            ${!project.checklist.tokenomics.completed ? `
+              <input type="text" id="tokenomics-link" placeholder="Enter tokenomics link">
+              <button onclick="submitChecklistLink('tokenomics')">Submit</button>
+            ` : `<span class="greenlight-status"><a href="${project.checklist.tokenomics.link}" target="_blank">Link</a></span>`}
+          </div>
+          <div class="checklist-item">
+            <input type="checkbox" id="website" ${project.checklist.website.completed ? 'checked' : ''} disabled>
+            <label for="website">Create Website</label>
+            ${!project.checklist.website.completed ? `
+              <input type="text" id="website-link" placeholder="Enter website link">
+              <button onclick="submitChecklistLink('website')">Submit</button>
+            ` : `<span class="greenlight-status"><a href="${project.checklist.website.link}" target="_blank">Link</a></span>`}
+          </div>
+        `;
+        const allCompleted = Object.values(project.checklist).every(item => item.completed);
+        document.getElementById('launch-btn').disabled = !allCompleted;
+      } catch (error) {
+        console.error('Error loading checklist:', error);
+      }
+    }
+
+    async function submitChecklistLink(item) {
+      const link = document.getElementById(`${item}-link`).value.trim();
+      if (!link || !/^https?:\/\//.test(link)) {
+        alert('Please enter a valid URL.');
+        return;
+      }
+      try {
+        const response = await fetch(`/api/projects/${currentProjectId}/checklist/${item}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+          },
+          body: JSON.stringify({ link })
+        });
+        if (response.ok) {
+          loadChecklist();
+        } else {
+          alert('Error submitting link.');
+        }
+      } catch (error) {
+        console.error('Error submitting checklist link:', error);
+        alert('Error submitting link.');
+      }
+    }
+
+    async function greenlightRewardFee() {
+      const share = parseFloat(document.getElementById('reward-fee-share').value);
+      if (isNaN(share) || share <= 0 || share > 100) {
+        alert('Please enter a valid percentage (0-100).');
+        return;
+      }
+      try {
+        const response = await fetch(`/api/projects/${currentProjectId}/checklist/reward-fee`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+          },
+          body: JSON.stringify({ share })
+        });
+        if (response.ok) {
+          loadChecklist();
+        } else {
+          alert('Error greenlighting reward fee.');
+        }
+      } catch (error) {
+        console.error('Error greenlighting reward fee:', error);
+        alert('Error greenlighting reward fee.');
+      }
+    }
+
+    async function markTaskComplete(messageId) {
+      try {
+        const response = await fetch(`/api/group-messages/${messageId}/complete`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
+        if (response.ok) {
+          loadMessages();
+        } else {
+          alert('Error marking task complete.');
+        }
+      } catch (error) {
+        console.error('Error marking task complete:', error);
+        alert('Error marking task complete.');
+      }
+    }
+
+    document.getElementById('message-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const content = document.getElementById('message-input').value.trim();
+      const assigneeXUsername = document.getElementById('task-assignee').value;
+      if (!content) return;
+      try {
+        const response = await fetch(`/api/group-messages/${currentProjectId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+          },
+          body: JSON.stringify({ content, assigneeXUsername })
+        });
+        if (response.ok) {
+          document.getElementById('message-input').value = '';
+          document.getElementById('task-assignee').value = '';
+          loadMessages();
+        } else {
+          alert('Error sending message.');
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        alert('Error sending message.');
+      }
+    });
+
+    document.getElementById('launch-btn').addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/api/projects/${currentProjectId}/launch`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
+        if (response.ok) {
+          alert('Project launched! Redirecting to believe website...');
+          window.location.href = 'https://believe.crewplatform.com';
+        } else {
+          alert('Error launching project.');
+        }
+      } catch (error) {
+        console.error('Error launching project:', error);
+        alert('Error launching project.');
+      }
+    });
+
+    async function fetchUnreadMessages() {
+      try {
+        const response = await fetch('/api/messages/unread', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
+        if (response.ok) {
+          const { count } = await response.json();
+          document.getElementById('notification-count').textContent = count;
+        }
+      } catch (error) {
+        console.error('Error fetching unread messages:', error);
+      }
+    }
+
+    async function initializePage() {
+      const token = localStorage.getItem('jwtToken');
+      if (!token) {
+        document.getElementById('chat-section').style.display = 'none';
+        document.getElementById('no-access-container').style.display = 'block';
+        return;
+      }
+      try {
+        const decoded = JSON.parse(atob(token.split('.')[1]));
+        localStorage.setItem('xUsername', decoded.xUsername);
+        const hasProjects = await fetchUserProjects();
+        document.getElementById('chat-section').style.display = hasProjects ? 'flex' : 'none';
+        document.getElementById('no-access-container').style.display = hasProjects ? 'none' : 'block';
+        if (hasProjects) {
+          await fetchUnreadMessages();
+        }
+      } catch (error) {
+        console.error('Error initializing page:', error);
+        document.getElementById('chat-section').style.display = 'none';
+        document.getElementById('no-access-container').style.display = 'block';
+      }
+    }
+
+    initializePage();
+  </script>
+</body>
+</html>
