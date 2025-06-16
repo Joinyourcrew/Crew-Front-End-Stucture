@@ -1,339 +1,428 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Join - CREW</title>
+  <title>Join a Crew</title>
+  <link href="https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;700&display=swap');
-
-    * {
+    body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
       font-family: 'Avenir', sans-serif;
-      line-height: 1.6;
-      color: #f5f5f5;
-      background: #1a1a1a;
-      scroll-behavior: smooth;
-      overflow-x: hidden;
-      position: relative;
+      background: linear-gradient(135deg, #6a0dad, #00f);
+      background-size: 200% 200%;
+      animation: gradientShift 15s ease infinite;
+      color: #fff;
     }
-
-    canvas#logo-bg {
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      background: #000;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+    .logo-container svg {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+    }
+    nav {
+      margin-left: auto;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    nav a:hover {
+      color: #f60;
+    }
+    .projects-section {
+      padding: 40px;
+    }
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .project-card {
+      background: #111;
+      padding: 20px;
+      border: 2px solid #00f;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #00f;
+      transition: transform 0.3s;
+    }
+    .project-card:hover {
+      transform: scale(1.05);
+    }
+    .project-card img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+    .apply-btn {
+      background: #00f;
+      color: #fff;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background 0.3s;
+    }
+    .apply-btn:hover {
+      background: #0055ff;
+    }
+    .modal {
+      display: none;
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: -1;
-      opacity: 0.2;
-    }
-
-    nav {
-      background: rgba(26, 26, 26, 0.9);
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
       z-index: 1000;
-      padding: 0.5rem 2rem;
     }
-
-    .nav-container {
-      max-width: 1000px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: relative;
+    .modal-content {
+      background: #111;
+      padding: 30px;
+      border: 2px solid #00f;
+      border-radius: 15px;
+      width: 400px;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
     }
-
-    .nav-container::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 1px;
-      background: #ff4d4d;
+    .modal-content h2 {
+      margin: 0 0 20px;
+      color: #f60;
     }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-    }
-
-    .nav-logo svg {
-      width: 32px;
-      height: 32px;
-      margin-right: 0.5rem;
-      fill: none;
-      stroke: #f5f5f5;
-      transition: stroke 0.3s ease;
-      outline: none;
-    }
-
-    .nav-logo:hover svg {
-      stroke: #ff4d4d;
-    }
-
-    .nav-logo span {
-      font-family: 'Avenir', sans-serif;
-      font-size: 1.2rem;
+    .modal-content label {
+      display: block;
+      text-align: left;
+      margin: 15px 0 5px;
       font-weight: 700;
-      color: #f5f5f5;
-      letter-spacing: 1px;
     }
-
-    .nav-links {
-      list-style: none;
-      display: flex;
-      gap: 2rem;
+    .modal-content select, .modal-content textarea {
+      width: 100%;
+      padding: 12px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #00f;
+      border-radius: 10px;
+      font-size: 1em;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
-
-    .nav-links li a {
+    .modal-content select:focus, .modal-content textarea:focus {
+      outline: none;
+      border-color: #f60;
+      box-shadow: 0 0 8px rgba(255, 102, 0, 0.5);
+    }
+    .modal-content textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .modal-content button {
+      background: #00f;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 700;
+      width: 100%;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .modal-content button:hover {
+      background: #0055ff;
+      box-shadow: 0 0 10px rgba(0, 85, 255, 0.7);
+    }
+    .close-btn {
+      background: #f00;
+      color: #fff;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      float: right;
+      font-size: 0.9em;
+      transition: background 0.3s;
+    }
+    .close-btn:hover {
+      background: #aa0000;
+    }
+    .link-modal-content {
+      text-align: center;
+    }
+    .link-modal-content a {
+      color: #00f;
       text-decoration: none;
-      color: #f5f5f5;
-      font-size: 0.8rem;
-      font-weight: 300;
-      transition: color 0.3s ease;
+      font-weight: 700;
+      transition: color 0.3s;
     }
-
-    .nav-links li a:hover {
-      color: #ff4d4d;
+    .link-modal-content a:hover {
+      color: #f60;
     }
-
-    .hamburger {
-      display: none;
-      font-size: 1.3rem;
-      color: #f5f5f5;
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #000;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    .social-links img {
+      width: 30px;
+      margin: 0 10px;
+    }
+    .chat-box {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
       cursor: pointer;
     }
-
-    main {
-      min-height: calc(100vh - 60px - 80px); /* Adjust based on nav/footer height */
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 2rem;
-      max-width: 800px;
-      margin: 0 auto;
+    .chat-box svg {
+      width: 50px;
+      height: 50px;
     }
-
-    main h1 {
-      font-family: 'Avenir', sans-serif;
-      font-size: 2.8rem;
-      font-weight: 700;
-      color: #f5f5f5;
-      margin-bottom: 1rem;
-      letter-spacing: -1px;
-    }
-
-    main p {
-      font-size: 1rem;
-      font-weight: 300;
-      color: #cccccc;
-      margin-bottom: 1rem;
-    }
-
-    footer {
-      background: rgba(26, 26, 26, 0.9);
-      color: #cccccc;
-      text-align: center;
-      padding: 1.5rem;
-      font-size: 0.8rem;
-    }
-
-    .footer-socials {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-top: 1rem;
-    }
-
-    .footer-socials a {
-      display: inline-block;
-    }
-
-    .footer-socials svg {
-      width: 24px;
-      height: 24px;
-      fill: #f5f5f5;
-      transition: fill 0.3s ease;
-    }
-
-    .footer-socials a:hover svg {
-      fill: #ff4d4d;
-    }
-
-    @media (max-width: 768px) {
-      .hamburger {
-        display: block;
-      }
-
-      .nav-links {
-        display: none;
-        flex-direction: column;
-        position: absolute;
-        top: 48px;
-        left: 0;
-        width: 100%;
-        background: rgba(26, 26, 26, 0.9);
-        padding: 2rem;
-        align-items: center;
-      }
-
-      .nav-links.active {
-        display: flex;
-      }
-
-      .nav-links li {
-        margin: 0.75rem 0;
-      }
-
-      .nav-links li a {
-        font-size: 1rem;
-      }
-
-      main h1 {
-        font-size: 2.2rem;
-      }
-
-      main p {
-        font-size: 0.95rem;
-      }
-
-      .nav-logo svg {
-        width: 28px;
-        height: 28px;
-      }
-
-      .footer-socials svg {
-        width: 20px;
-        height: 20px;
-      }
+    .notification-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #f00;
+      color: #fff;
+      border-radius: 50%;
+      padding: 5px 10px;
+      font-size: 0.8em;
     }
   </style>
 </head>
 <body>
-  <canvas id="logo-bg"></canvas>
-  <nav>
-    <div class="nav-container">
-      <a href="index.html" class="nav-logo">
-        <svg viewBox="0 0 100 100">
-          <path d="M20 80 L40 20 L60 80 M40 20 L80 40" stroke-width="8" stroke-linecap="round"/>
-        </svg>
-        <span>CREW</span>
-      </a>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="join.html">Join</a></li>
-        <li><a href="dream.html">Dream</a></li>
-        <li><a href="revive.html">Revive</a></li>
-        <li><a href="roadmap.html">Roadmap</a></li>
-      </ul>
-      <div class="hamburger">☰</div>
+  <header>
+    <div class="logo-container">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 80 L40 20 L60 80 M40 20 L80 40" stroke-width="8" stroke="#f5f5f5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <h1>CREW</h1>
     </div>
-  </nav>
-
-  <main>
-    <section class="page-content">
-      <h1>Join</h1>
-      <p>Find and join a crew that aligns with your skills and interests.</p>
-    </section>
-  </main>
-
+    <nav>
+      <a href="/index.html">Home</a>
+      <a href="/top-projects.html">Top Projects</a>
+      <a href="/join.html">Join</a>
+      <a href="/dream.html">Dream</a>
+      <a href="/revive.html">Revive</a>
+      <a href="/signup.html">Sign Up</a>
+    </nav>
+  </header>
+  <section class="projects-section">
+    <h2>Join a Project</h2>
+    <div class="project-grid" id="project-grid">
+      <div class="project-card">
+        <img src="https://via.placeholder.com/50" alt="Creator Profile">
+        <h3>DeFi Yield Farm</h3>
+        <p>Creator: @SolanaDev</p>
+        <p>A decentralized yield farming protocol on Solana.</p>
+        <p>Needed: Smart Contract Dev, UI Designer</p>
+        <button class="apply-btn" onclick="openApplyModal('1', 'Smart Contract Dev, UI Designer')">Apply</button>
+      </div>
+      <div class="project-card">
+        <img src="https://via.placeholder.com/50" alt="Creator Profile">
+        <h3>NFT Marketplace</h3>
+        <p>Creator: @CryptoArt</p>
+        <p>A platform for trading unique NFTs.</p>
+        <p>Needed: Backend Dev, Artist</p>
+        <button class="apply-btn" onclick="openApplyModal('2', 'Backend Dev, Artist')">Apply</button>
+      </div>
+    </div>
+  </section>
+  <div class="modal" id="apply-modal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeApplyModal()">Close</button>
+      <h2>Apply to Project</h2>
+      <form id="apply-form">
+        <label for="position">Position</label>
+        <select id="position" name="position" required>
+          <option value="">Select a position</option>
+        </select>
+        <label for="experience">Experience</label>
+        <textarea id="experience" name="experience" rows="4" required></textarea>
+        <button type="submit">Submit Application</button>
+      </form>
+    </div>
+  </div>
+  <div class="modal" id="link-modal">
+    <div class="modal-content link-modal-content">
+      <button class="close-btn" onclick="closeLinkModal()">Close</button>
+      <h2>Next Steps</h2>
+      <p>Join the project conversation!</p>
+      <a id="project-link" href="#" target="_blank">Visit Project Link</a>
+    </div>
+  </div>
   <footer>
-    <p>© 2025 CREW</p>
-    <div class="footer-socials">
-      <a href="#">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-        </svg>
-      </a>
-      <a href="#">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.26.82-.577v-2.165c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.087-.744.083-.729.083-.729 1.205.084 1.838 1.237 1.838 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.776.418-1.305.762-1.605-2.665-.305-5.467-1.334-5.467-5.933 0-1.31.467-2.381 1.235-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.218.694.825.576C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/>
-        </svg>
-      </a>
-      <a href="#">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M22.46 6c-.8-.35-1.64-.54-2.5-.6.9.5 1.52 1.4 1.82 2.5-.83-.05-1.65-.1-2.45-.2C18.18 7.26 17.15 7 16 7c-2.4 0-4.35 1.95-4.35 4.35 0 .34.04.67.1 1-.36-.02-.7-.08-1.05-.17-3.6-.7-6.4-3.8-6.4-7.6 0-.8.1-1.6.3-2.3-.4.6-.6 1.4-.6 2.3 0 1.5.76 2.8 1.9 3.6-.7-.02-1.4-.2-2-.5v.05c0 2.1 1.5 3.9 3.5 4.3-.3.08-.6.13-1 .15-.2 0-.4 0-.6-.05.5 1.6 2 2.8 3.8 2.9-1.4 1.1-3.2 1.8-5.1 1.8-.3 0-.6 0-.9-.05 1.8 1.1 4 1.8 6.3 1.8 7.5 0 11.6-6.2 11.6-11.6 0-.17 0-.33-.02-.5.8-.6 1.5-1.4 2-2.3z"/>
-        </svg>
-      </a>
+    <div class="social-links">
+      <a href="https://x.com"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/x-twitter.svg" alt="X"></a>
+      <a href="https://github.com"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/github.svg" alt="GitHub"></a>
     </div>
+    © 2025 Crew Platform.
   </footer>
-
+  <div class="chat-box" onclick="alert('Messages feature coming soon! Check your wallet details in notifications.')">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#fff">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9-2-2-2V4c0-1.1-.9-2-2-2zm0 14h-4.7L12 19.3 8.7 16H4V4h16v12z"/>
+    </svg>
+    <span class="notification-badge" id="notification-count">0</span>
+  </div>
   <script>
-    const hamburger = document.querySelector('.hamburger');
-    const navLinks = document.querySelector('.nav-links');
+    let currentProjectId = null;
 
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
+    async function fetchProjects() {
+      try {
+        const response = await fetch('/api/projects');
+        const projects = await response.json();
+        const projectGrid = document.getElementById('project-grid');
+        projectGrid.innerHTML = projects.map(project => `
+          <div class="project-card">
+            <img src="${project.creatorProfilePic || 'https://via.placeholder.com/50'}" alt="Creator Profile">
+            <h3>${project.name}</h3>
+            <p>Creator: @${project.creatorXUsername}</p>
+            <p>${project.summary}</p>
+            <p>Needed: ${project.neededPositions.join(', ')}</p>
+            <button class="apply-btn" onclick="openApplyModal('${project._id}', '${project.neededPositions}')">Apply</button>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    }
+
+    async function fetchUnreadMessages() {
+      try {
+        const response = await fetch('/api/messages/unread', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
+        });
+        const { count } = await response.json();
+        document.getElementById('notification-count').textContent = count;
+      } catch (error) {
+        console.error('Error fetching unread messages:', error);
+      }
+    }
+
+    function openApplyModal(projectId, positions) {
+      if (!localStorage.getItem('jwtToken')) {
+        alert('Please sign in to apply.');
+        window.location.href = '/signup.html';
+        return;
+      }
+      currentProjectId = projectId;
+      const positionSelect = document.getElementById('position');
+      positionSelect.innerHTML = '<option value="">Select a position</option>' + 
+        positions.split(', ').map(pos => `<option value="${pos}">${pos}</option>`).join('');
+      document.getElementById('apply-modal').style.display = 'flex';
+    }
+
+    function closeApplyModal() {
+      document.getElementById('apply-modal').style.display = 'none';
+      currentProjectId = null;
+    }
+
+    function openLinkModal(link) {
+      document.getElementById('project-link').href = link;
+      document.getElementById('project-link').textContent = link;
+      document.getElementById('link-modal').style.display = 'flex';
+    }
+
+    function closeLinkModal() {
+      document.getElementById('link-modal').style.display = 'none';
+    }
+
+    document.getElementById('apply-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const position = document.getElementById('position').value;
+      const experience = document.getElementById('experience').value;
+      if (!position || !experience) {
+        alert('Please fill out all fields.');
+        return;
+      }
+      try {
+        const response = await fetch('/api/projects/apply', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+          },
+          body: JSON.stringify({ projectId: currentProjectId, position, experience })
+        });
+        if (response.ok) {
+          const { link } = await response.json();
+          closeApplyModal();
+          openLinkModal(link);
+          fetchUnreadMessages();
+        } else {
+          alert('Error submitting application.');
+        }
+      } catch (error) {
+        console.error('Error submitting application:', error);
+        alert('Error submitting application.');
+      }
     });
 
-    const canvas = document.getElementById('logo-bg');
-    const ctx = canvas.getContext('2d');
-    let width, height;
-
-    function resizeCanvas() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
-    }
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    const lines = [];
-    for (let i = 0; i < 30; i++) {
-      lines.push({
-        x1: Math.random() * width,
-        y1: Math.random() * height,
-        x2: Math.random() * width,
-        y2: Math.random() * height,
-        vx1: (Math.random() - 0.5) * 0.5,
-        vy1: (Math.random() - 0.5) * 0.5,
-        vx2: (Math.random() - 0.5) * 0.5,
-        vy2: (Math.random() - 0.5) * 0.5,
-        color: Math.random() < 0.2 ? '#ff4d4d' : '#f5f5f5',
-        rotation: Math.random() * Math.PI * 2
-      });
-    }
-
-    function animateLines() {
-      ctx.clearRect(0, 0, width, height);
-      lines.forEach(line => {
-        line.x1 += line.vx1;
-        line.y1 += line.vy1;
-        line.x2 += line.vx2;
-        line.y2 += line.vy2;
-        line.rotation += 0.01;
-
-        if (line.x1 < 0 || line.x1 > width) line.vx1 *= -1;
-        if (line.y1 < 0 || line.y1 > height) line.vy1 *= -1;
-        if (line.x2 < 0 || line.x2 > width) line.vx2 *= -1;
-        if (line.y2 < 0 || line.y2 > height) line.vy2 *= -1;
-
-        ctx.beginPath();
-        ctx.moveTo(line.x1, line.y1);
-        ctx.lineTo(line.x2, line.y2);
-        ctx.strokeStyle = line.color;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      });
-      requestAnimationFrame(animateLines);
-    }
-
-    animateLines();
+    // Comment out fetchProjects() to keep sample projects for now
+    // fetchProjects();
+    fetchUnreadMessages();
   </script>
 </body>
 </html>

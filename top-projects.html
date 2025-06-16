@@ -42,7 +42,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Revive - Crew Platform</title>
+  <title>Top Projects - Crew Platform</title>
   <link href="https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -87,23 +87,44 @@
     nav a:hover {
       color: #f60;
     }
-    .revive-section {
+    .top-projects {
+      padding: 40px;
       text-align: center;
-      padding: 100px 20px;
     }
-    .revive-section .title-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 20px;
+      margin-top: 20px;
     }
-    .revive-section h1 {
-      font-size: 4em;
-      margin: 0;
+    .project-card {
+      background: #111;
+      padding: 20px;
+      border: 2px solid #00f;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #00f;
+      transition: transform 0.3s;
     }
-    .revive-section svg {
-      width: 60px;
-      height: 60px;
+    .project-card:hover {
+      transform: scale(1.05);
+    }
+    .project-card img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+    .token-metrics {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .token-chart {
+      margin-top: 10px;
+    }
+    .token-chart svg {
+      width: 100%;
+      height: 50px;
     }
     footer {
       text-align: center;
@@ -156,12 +177,57 @@
       <a href="/signup.html">Sign Up</a>
     </nav>
   </header>
-  <section class="revive-section">
-    <div class="title-container">
-      <h1>Coming Soon</h1>
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 80 L40 20 L60 80 M40 20 L80 40" stroke-width="8" stroke="#f5f5f5" fill="none" stroke-linecap="round"/>
-      </svg>
+  <section class="top-projects">
+    <h2>Top Projects Launched on Crew</h2>
+    <div class="project-grid" id="project-grid">
+      <div class="project-card">
+        <img src="https://via.placeholder.com/50" alt="Creator Profile">
+        <h3>Solana Pay</h3>
+        <p>Creator: @SolPayDev</p>
+        <p>A payment protocol for instant Solana transactions.</p>
+        <p>Needed: Backend Dev, UI Designer</p>
+        <div class="token-metrics">
+          <span>Market Cap: $10M</span>
+          <span>Volume: $500K</span>
+        </div>
+        <div class="token-chart">
+          <svg viewBox="0 0 100 50" preserveAspectRatio="none">
+            <polyline points="0,40 20,30 40,35 60,20 80,25 100,15" fill="none" stroke="#00f" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="project-card">
+        <img src="https://via.placeholder.com/50" alt="Creator Profile">
+        <h3>NFT Art Gallery</h3>
+        <p>Creator: @NFTCreator</p>
+        <p>A virtual gallery for showcasing NFTs.</p>
+        <p>Needed: 3D Artist, Frontend Dev</p>
+        <div class="token-metrics">
+          <span>Market Cap: $5M</span>
+          <span>Volume: $300K</span>
+        </div>
+        <div class="token-chart">
+          <svg viewBox="0 0 100 50" preserveAspectRatio="none">
+            <polyline points="0,45 20,35 40,40 60,25 80,30 100,20" fill="none" stroke="#00f" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="project-card">
+        <img src="https://via.placeholder.com/50" alt="Creator Profile">
+        <h3>Decentralized Voting</h3>
+        <p>Creator: @VoteChain</p>
+        <p>A secure voting system on Solana.</p>
+        <p>Needed: Security Expert, Smart Contract Dev</p>
+        <div class="token-metrics">
+          <span>Market Cap: $2M</span>
+          <span>Volume: $100K</span>
+        </div>
+        <div class="token-chart">
+          <svg viewBox="0 0 100 50" preserveAspectRatio="none">
+            <polyline points="0,50 20,40 40,45 60,30 80,35 100,25" fill="none" stroke="#00f" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
     </div>
   </section>
   <footer>
@@ -178,6 +244,34 @@
     <span class="notification-badge" id="notification-count">0</span>
   </div>
   <script>
+    async function fetchTopProjects() {
+      try {
+        const response = await fetch('/api/projects/top');
+        const projects = await response.json();
+        const projectGrid = document.getElementById('project-grid');
+        projectGrid.innerHTML = projects.map(project => `
+          <div class="project-card">
+            <img src="${project.creatorProfilePic || 'https://via.placeholder.com/50'}" alt="Creator Profile">
+            <h3>${project.name}</h3>
+            <p>Creator: @${project.creatorXUsername}</p>
+            <p>${project.summary}</p>
+            <p>Needed: ${project.neededPositions.join(', ')}</p>
+            <div class="token-metrics">
+              <span>Market Cap: ${project.marketCap || 'N/A'}</span>
+              <span>Volume: ${project.volume || 'N/A'}</span>
+            </div>
+            <div class="token-chart">
+              <svg viewBox="0 0 100 50" preserveAspectRatio="none">
+                <polyline points="${project.tokenChartPoints || '0,40 20,30 40,35 60,20 80,25 100,15'}" fill="none" stroke="#00f" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error fetching top projects:', error);
+      }
+    }
+
     async function fetchUnreadMessages() {
       try {
         const response = await fetch('/api/messages/unread');
@@ -188,6 +282,8 @@
       }
     }
 
+    // Comment out fetchTopProjects() to keep sample projects for now
+    // fetchTopProjects();
     fetchUnreadMessages();
   </script>
 </body>
