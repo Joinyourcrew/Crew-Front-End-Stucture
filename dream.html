@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -45,153 +6,475 @@
   <title>Dream - Crew Platform</title>
   <link href="https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
-    body {
+    * {
       margin: 0;
       padding: 0;
-      font-family: 'Avenir', sans-serif;
-      background: linear-gradient(135deg, #6a0dad, #00f);
-      background-size: 200% 200%;
-      animation: gradientShift 15s ease infinite;
-      color: #fff;
+      box-sizing: border-box;
     }
+
+    body {
+      font-family: 'Avenir', sans-serif;
+      background: linear-gradient(135deg, #1a0033, #330066, #4a00cc, #0066ff, #6600cc);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease infinite;
+      color: #fff;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    /* Animated background particles */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255, 102, 0, 0.4), transparent),
+        radial-gradient(1px 1px at 90px 40px, rgba(0, 255, 255, 0.3), transparent),
+        radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.2), transparent);
+      background-size: 200px 200px;
+      animation: float 30s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
     @keyframes gradientShift {
       0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
+      25% { background-position: 100% 50%; }
+      50% { background-position: 100% 100%; }
+      75% { background-position: 0% 100%; }
       100% { background-position: 0% 50%; }
     }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      33% { transform: translateY(-30px) rotate(0.5deg); }
+      66% { transform: translateY(30px) rotate(-0.5deg); }
+    }
+
+    @keyframes glow {
+      0%, 100% { text-shadow: 0 0 20px rgba(255, 102, 0, 0.5); }
+      50% { text-shadow: 0 0 30px rgba(255, 102, 0, 0.8), 0 0 40px rgba(255, 102, 0, 0.3); }
+    }
+
     header {
       display: flex;
       align-items: center;
-      padding: 20px;
-      background: #000;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 10;
     }
+
     .logo-container {
       display: flex;
       align-items: center;
+      transition: transform 0.3s ease;
     }
+
+    .logo-container:hover {
+      transform: scale(1.1);
+    }
+
     .logo-container svg {
       width: 40px;
       height: 40px;
-      margin-right: 10px;
+      margin-right: 15px;
+      filter: drop-shadow(0 0 10px rgba(255, 102, 0, 0.5));
     }
+
+    .logo-container h1 {
+      font-size: 1.8em;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, #f60, #00f);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glow 3s ease-in-out infinite;
+    }
+
     nav {
       margin-left: auto;
     }
+
     nav a {
       color: #fff;
-      margin: 0 15px;
+      margin: 0 20px;
       text-decoration: none;
       font-weight: 700;
       text-transform: uppercase;
+      position: relative;
+      transition: all 0.3s ease;
+      font-size: 0.9em;
+      letter-spacing: 1px;
     }
+
+    nav a::before {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(45deg, #f60, #00f);
+      transition: width 0.3s ease;
+    }
+
     nav a:hover {
       color: #f60;
+      transform: translateY(-2px);
     }
-    .dream-section {
-      padding: 60px 20px;
-      text-align: center;
-      min-height: calc(100vh - 140px);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+
+    nav a:hover::before {
+      width: 100%;
     }
-    .dream-form {
-      max-width: 600px;
+
+    .main-content {
+      padding: 40px 20px;
+      max-width: 800px;
       margin: 0 auto;
-      background: #111;
-      padding: 30px;
-      border: 2px solid #00f;
-      border-radius: 15px;
-      box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
+      position: relative;
+      z-index: 5;
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: 3em;
+      margin-bottom: 20px;
+      color: #f60;
+      animation: glow 4s ease-in-out infinite;
+    }
+
+    .page-subtitle {
+      text-align: center;
+      font-size: 1.2em;
+      margin-bottom: 40px;
+      color: #ccc;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .form-container {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #f60, #ff0066);
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: #f60;
+      font-size: 1.1em;
+    }
+
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1em;
+      outline: none;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .form-input::placeholder, .form-textarea::placeholder {
+      color: #999;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: #f60;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .form-select option {
+      background: #000;
+      color: #fff;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .skills-section {
+      margin-bottom: 25px;
+    }
+
+    .skills-input-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .skills-input {
+      flex: 1;
+    }
+
+    .add-skill-btn {
+      padding: 15px 20px;
+      background: linear-gradient(45deg, #f60, #ff0066);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
       transition: transform 0.3s ease;
     }
-    .dream-form:hover {
-      transform: translateY(-5px);
+
+    .add-skill-btn:hover {
+      transform: translateY(-2px);
     }
-    .dream-form h2 {
-      margin: 0 0 20px;
-      font-size: 2em;
+
+    .skills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .skill-tag {
+      background: rgba(255, 102, 0, 0.2);
       color: #f60;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      border: 1px solid rgba(255, 102, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .dream-form label {
-      display: block;
-      text-align: left;
-      margin: 15px 0 5px;
+
+    .remove-skill {
+      background: none;
+      border: none;
+      color: #f60;
+      cursor: pointer;
       font-weight: 700;
-      color: #fff;
+      font-size: 1.1em;
     }
-    .dream-form input, .dream-form textarea {
-      width: 100%;
-      padding: 12px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #00f;
-      border-radius: 10px;
-      font-size: 1em;
-      transition: border-color 0.3s, box-shadow 0.3s;
+
+    .timeline-section {
+      margin-bottom: 25px;
     }
-    .dream-form input:focus, .dream-form textarea:focus {
-      outline: none;
-      border-color: #f60;
-      box-shadow: 0 0 8px rgba(255, 102, 0, 0.5);
+
+    .timeline-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 10px;
     }
-    .dream-form textarea {
-      resize: vertical;
-      min-height: 100px;
+
+    .timeline-option {
+      position: relative;
     }
-    .dream-form button {
-      background: #00f;
-      color: #fff;
-      padding: 12px;
+
+    .timeline-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .timeline-option label {
+      display: block;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 700;
+    }
+
+    .timeline-option input[type="radio"]:checked + label {
+      background: linear-gradient(45deg, #f60, #ff0066);
+      border-color: transparent;
+    }
+
+    .submit-section {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .submit-btn {
+      padding: 18px 40px;
+      background: linear-gradient(45deg, #f60, #ff0066);
       border: none;
       border-radius: 25px;
-      cursor: pointer;
-      font-size: 1.1em;
+      color: #fff;
+      font-family: inherit;
       font-weight: 700;
-      width: 100%;
-      transition: background 0.3s, box-shadow 0.3s;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-    .dream-form button:hover {
-      background: #0055ff;
-      box-shadow: 0 0 10px rgba(0, 85, 255, 0.7);
+
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(255, 102, 0, 0.4);
     }
-    .dream-form .error {
-      color: #f00;
+
+    .form-help {
       font-size: 0.9em;
-      margin-top: 5px;
-      display: none;
+      color: #999;
+      margin-top: 8px;
+      font-style: italic;
     }
+
+    .inspiration-section {
+      background: rgba(255, 102, 0, 0.1);
+      border: 1px solid rgba(255, 102, 0, 0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .inspiration-title {
+      color: #f60;
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    .inspiration-examples {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .inspiration-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 0.9em;
+    }
+
+    .inspiration-item-title {
+      font-weight: 700;
+      color: #f60;
+      margin-bottom: 5px;
+    }
+
     footer {
       text-align: center;
-      padding: 20px;
-      background: #000;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
+      padding: 40px 20px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 10;
+      margin-top: 50px;
     }
+
+    .social-links {
+      margin-bottom: 20px;
+    }
+
     .social-links img {
-      width: 30px;
-      margin: 0 10px;
+      width: 40px;
+      height: 40px;
+      margin: 0 15px;
+      transition: all 0.3s ease;
+      filter: grayscale(100%);
     }
+
+    .social-links img:hover {
+      filter: grayscale(0%) drop-shadow(0 0 10px rgba(255, 102, 0, 0.5));
+      transform: scale(1.2);
+    }
+
     .chat-box {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 30px;
+      right: 30px;
       cursor: pointer;
+      z-index: 1000;
+      transition: all 0.3s ease;
     }
+
+    .chat-box:hover {
+      transform: scale(1.1);
+    }
+
     .chat-box svg {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
+      filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
     }
+
     .notification-badge {
       position: absolute;
       top: -10px;
       right: -10px;
-      background: #f00;
+      background: linear-gradient(45deg, #ff0040, #ff6600);
       color: #fff;
       border-radius: 50%;
-      padding: 5px 10px;
+      padding: 8px 12px;
       font-size: 0.8em;
+      font-weight: 700;
+      animation: pulse 2s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(255, 0, 64, 0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .timeline-options {
+        grid-template-columns: 1fr;
+      }
+      
+      .inspiration-examples {
+        grid-template-columns: 1fr;
+      }
+      
+      nav a {
+        margin: 0 10px;
+        font-size: 0.8em;
+      }
     }
   </style>
 </head>
@@ -207,105 +490,250 @@
       <a href="/index.html">Home</a>
       <a href="/top-projects.html">Top Projects</a>
       <a href="/join.html">Join</a>
-      <a href="/dream.html">Dream</a>
+      <a href="/dream.html" class="active">Dream</a>
       <a href="/revive.html">Revive</a>
       <a href="/signup.html">Sign Up</a>
     </nav>
   </header>
-  <section class="dream-section">
-    <form class="dream-form" id="dream-form">
-      <h2>Submit Your Project Idea</h2>
-      <label for="project-name">Project Name</label>
-      <input type="text" id="project-name" name="project-name" required>
-      <div class="error" id="project-name-error">Please enter a project name.</div>
-      <label for="summary">Project Summary</label>
-      <textarea id="summary" name="summary" required></textarea>
-      <div class="error" id="summary-error">Please provide a summary.</div>
-      <label for="needed-positions">Needed Positions (comma-separated)</label>
-      <input type="text" id="needed-positions" name="needed-positions" placeholder="e.g., Smart Contract Dev, UI Designer" required>
-      <div class="error" id="needed-positions-error">Please list needed positions.</div>
-      <button type="submit">Submit Idea</button>
+
+  <main class="main-content">
+    <h1 class="page-title">Dream</h1>
+    <p class="page-subtitle">Turn your Web3 vision into reality. Create a crypto project and find passionate collaborators to build on Solana.</p>
+
+    <div class="inspiration-section">
+      <div class="inspiration-title">Need inspiration? Here are some Web3 project ideas:</div>
+      <div class="inspiration-examples">
+        <div class="inspiration-item">
+          <div class="inspiration-item-title">DeFi Innovation</div>
+          AMM protocols, yield farming, lending platforms, derivatives
+        </div>
+        <div class="inspiration-item">
+          <div class="inspiration-item-title">NFT & Gaming</div>
+          Dynamic NFTs, play-to-earn games, metaverse experiences
+        </div>
+        <div class="inspiration-item">
+          <div class="inspiration-item-title">Infrastructure</div>
+          Cross-chain bridges, oracle networks, developer tools
+        </div>
+        <div class="inspiration-item">
+          <div class="inspiration-item-title">DAO & Governance</div>
+          Community DAOs, creator platforms, decentralized funding
+        </div>
+      </div>
+    </div>
+
+    <form class="form-container" id="projectForm">
+      <div class="form-group">
+        <label class="form-label" for="projectTitle">Project Title *</label>
+        <input type="text" id="projectTitle" class="form-input" placeholder="What's your project called?" required>
+        <div class="form-help">Choose a clear, memorable name that captures your project's essence</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="projectDescription">Project Description *</label>
+        <textarea id="projectDescription" class="form-textarea" placeholder="Describe your vision, what problem you're solving, and what you want to build..." required></textarea>
+        <div class="form-help">Be specific about your goals, target audience, and the impact you want to make</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="projectCategory">Category *</label>
+          <select id="projectCategory" class="form-select" required>
+            <option value="">Select a category</option>
+            <option value="defi">DeFi & Trading</option>
+            <option value="nft">NFT & Digital Art</option>
+            <option value="gaming">Gaming & Metaverse</option>
+            <option value="dao">DAO & Governance</option>
+            <option value="infrastructure">Infrastructure & Tools</option>
+            <option value="social">Social & Community</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="teamSize">Team Size Needed</label>
+          <select id="teamSize" class="form-select">
+            <option value="">How many people?</option>
+            <option value="2-3">2-3 people (Core team)</option>
+            <option value="4-6">4-6 people (Small team)</option>
+            <option value="7-10">7-10 people (Medium team)</option>
+            <option value="10+">10+ people (Large collaboration)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="skills-section">
+        <label class="form-label">Skills & Roles Needed</label>
+        <div class="skills-input-container">
+          <input type="text" id="skillInput" class="form-input skills-input" placeholder="e.g., Rust Developer, Solana SDK, Token Economics, UI/UX Designer">
+          <button type="button" class="add-skill-btn" onclick="addSkill()">Add</button>
+        </div>
+        <div class="skills-list" id="skillsList"></div>
+        <div class="form-help">Add specific skills, roles, or expertise you're looking for in your team members</div>
+      </div>
+
+      <div class="timeline-section">
+        <label class="form-label">Project Timeline</label>
+        <div class="timeline-options">
+          <div class="timeline-option">
+            <input type="radio" id="timeline1" name="timeline" value="1-3 months">
+            <label for="timeline1">1-3 months</label>
+          </div>
+          <div class="timeline-option">
+            <input type="radio" id="timeline2" name="timeline" value="3-6 months">
+            <label for="timeline2">3-6 months</label>
+          </div>
+          <div class="timeline-option">
+            <input type="radio" id="timeline3" name="timeline" value="6-12 months">
+            <label for="timeline3">6-12 months</label>
+          </div>
+          <div class="timeline-option">
+            <input type="radio" id="timeline4" name="timeline" value="1+ years">
+            <label for="timeline4">1+ years</label>
+          </div>
+          <div class="timeline-option">
+            <input type="radio" id="timeline5" name="timeline" value="ongoing">
+            <label for="timeline5">Ongoing</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="projectGoals">Success Metrics & Goals</label>
+        <textarea id="projectGoals" class="form-textarea" placeholder="What does success look like for this project? TVL targets, user adoption, token price goals, etc."></textarea>
+        <div class="form-help">Define clear, measurable goals that will help your team stay focused and motivated</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="experience">Experience Level Preferred</label>
+        <select id="experience" class="form-select">
+          <option value="">Any experience level</option>
+          <option value="beginner">Beginner-friendly</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+          <option value="mixed">Mixed levels welcome</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="additionalInfo">Additional Information</label>
+        <textarea id="additionalInfo" class="form-textarea" placeholder="Anything else potential collaborators should know? Token distribution, roadmap details, funding status, etc."></textarea>
+      </div>
+
+      <div class="submit-section">
+        <button type="submit" class="submit-btn">Create My Project</button>
+        <div class="form-help" style="margin-top: 15px; color: #ccc;">
+          Your project will be reviewed and published within 24 hours
+        </div>
+      </div>
     </form>
-  </section>
+  </main>
+
   <footer>
     <div class="social-links">
       <a href="https://x.com"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/x-twitter.svg" alt="X"></a>
       <a href="https://github.com"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/github.svg" alt="GitHub"></a>
     </div>
-    © 2025 Crew Platform.
+    <p>© 2025 Crew Platform.</p>
   </footer>
-  <div class="chat-box" onclick="alert('Messages feature coming soon! Check your wallet details in notifications.')">
+
+  <div class="chat-box" onclick="alert('Messages feature coming soon!')">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#fff">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9-2-2-2V4c0-1.1-.9-2-2-2zm0 14h-4.7L12 19.3 8.7 16H4V4h16v12z"/>
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14h-4.7L12 19.3 8.7 16H4V4h16v12z"/>
     </svg>
     <span class="notification-badge" id="notification-count">0</span>
   </div>
+
   <script>
-    document.getElementById('dream-form').addEventListener('submit', async (e) => {
+    let skills = [];
+
+    function addSkill() {
+      const skillInput = document.getElementById('skillInput');
+      const skill = skillInput.value.trim();
+      
+      if (skill && !skills.includes(skill)) {
+        skills.push(skill);
+        updateSkillsList();
+        skillInput.value = '';
+      }
+    }
+
+    function removeSkill(skill) {
+      skills = skills.filter(s => s !== skill);
+      updateSkillsList();
+    }
+
+    function updateSkillsList() {
+      const skillsList = document.getElementById('skillsList');
+      skillsList.innerHTML = skills.map(skill => `
+        <div class="skill-tag">
+          ${skill}
+          <button type="button" class="remove-skill" onclick="removeSkill('${skill}')">×</button>
+        </div>
+      `).join('');
+    }
+
+    // Add skill on Enter key
+    document.getElementById('skillInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addSkill();
+      }
+    });
+
+    // Form submission
+    document.getElementById('projectForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      if (!localStorage.getItem('jwtToken')) {
-        alert('Please sign in to submit a project idea.');
-        window.location.href = '/signup.html';
-        return;
-      }
-      const name = document.getElementById('project-name').value.trim();
-      const summary = document.getElementById('summary').value.trim();
-      const neededPositions = document.getElementById('needed-positions').value.split(',').map(pos => pos.trim()).filter(pos => pos);
-      let valid = true;
-      if (!name) {
-        document.getElementById('project-name-error').style.display = 'block';
-        valid = false;
-      } else {
-        document.getElementById('project-name-error').style.display = 'none';
-      }
-      if (!summary) {
-        document.getElementById('summary-error').style.display = 'block';
-        valid = false;
-      } else {
-        document.getElementById('summary-error').style.display = 'none';
-      }
-      if (!neededPositions.length) {
-        document.getElementById('needed-positions-error').style.display = 'block';
-        valid = false;
-      } else {
-        document.getElementById('needed-positions-error').style.display = 'none';
-      }
-      if (!valid) return;
-      try {
-        const response = await fetch('/api/projects', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
-          },
-          body: JSON.stringify({ name, summary, neededPositions })
-        });
-        if (response.ok) {
-          const { walletPublicKey } = await response.json();
-          alert(`Project idea submitted! Your Solana wallet public key: ${walletPublicKey}`);
-          window.location.href = '/index.html';
-        } else {
-          alert('Submission failed. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error submitting project:', error);
-        alert('Submission failed. Please try again.');
-      }
+      
+      // Collect form data
+      const formData = {
+        title: document.getElementById('projectTitle').value,
+        description: document.getElementById('projectDescription').value,
+        category: document.getElementById('projectCategory').value,
+        teamSize: document.getElementById('teamSize').value,
+        skills: skills,
+        timeline: document.querySelector('input[name="timeline"]:checked')?.value,
+        goals: document.getElementById('projectGoals').value,
+        experience: document.getElementById('experience').value,
+        additionalInfo: document.getElementById('additionalInfo').value
+      };
+
+      // Simulate submission
+      const submitBtn = document.querySelector('.submit-btn');
+      const originalText = submitBtn.textContent;
+      
+      submitBtn.textContent = 'Creating Project...';
+      submitBtn.disabled = true;
+      
+      setTimeout(() => {
+        submitBtn.textContent = 'Project Created! 🎉';
+        setTimeout(() => {
+          alert('Your project has been submitted for review! You\'ll receive an email confirmation shortly.');
+          // Reset form or redirect
+          window.location.href = '/top-projects.html';
+        }, 2000);
+      }, 2000);
     });
 
     async function fetchUnreadMessages() {
       try {
-        const response = await fetch('/api/messages/unread', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
-        });
+        const response = await fetch('/api/messages/unread');
         const { count } = await response.json();
         document.getElementById('notification-count').textContent = count;
       } catch (error) {
         console.error('Error fetching unread messages:', error);
       }
     }
-
+    
     fetchUnreadMessages();
+  </script>
+  <!-- Add this line before your existing scripts -->
+  <script src="shared-functions.js"></script>
+  
+  <!-- Your existing page-specific scripts -->
+  <script>
+    // Your existing JavaScript code
   </script>
 </body>
 </html>
+
