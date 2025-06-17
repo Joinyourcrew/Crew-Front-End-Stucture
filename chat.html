@@ -40,247 +40,11 @@
         </script><!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat - Crew Platform</title>
-  <link href="https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Avenir', sans-serif;
-      background: linear-gradient(135deg, #6a0dad, #00f);
-      background-size: 200% 200%;
-      animation: gradientShift 15s ease infinite;
-      color: #fff;
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 20px;
-      background: #000;
-    }
-    .logo-container {
-      display: flex;
-      align-items: center;
-    }
-    .logo-container svg {
-      width: 40px;
-      height: 40px;
-      margin-right: 10px;
-    }
-    nav {
-      margin-left: auto;
-    }
-    nav a {
-      color: #fff;
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    nav a:hover {
-      color: #f60;
-    }
-    .chat-section {
-      padding: 40px;
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      gap: 20px;
-    }
-    .chat-container, .checklist-container {
-      background: #111;
-      padding: 20px;
-      border: 2px solid #00f;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00f;
-      flex: 1;
-    }
-    .chat-container h2, .checklist-container h2 {
-      color: #f60;
-      margin-top: 0;
-    }
-    .project-select {
-      width: 100%;
-      padding: 12px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #00f;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-    .message-list {
-      max-height: 400px;
-      overflow-y: auto;
-      margin-bottom: 20px;
-    }
-    .message {
-      background: #222;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 5px;
-    }
-    .message.task {
-      border-left: 4px solid #f60;
-    }
-    .message.task.completed {
-      border-left: 4px solid #0f0;
-    }
-    .message strong {
-      color: #f60;
-    }
-    .message-form {
-      display: flex;
-      gap: 10px;
-    }
-    .message-input, .task-assignee {
-      flex: 1;
-      padding: 12px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #00f;
-      border-radius: 10px;
-    }
-    .message-form button {
-      background: #00f;
-      color: #fff;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: background 0.3s;
-    }
-    .message-form button:hover {
-      background: #0055ff;
-    }
-    .checklist-item {
-      display: flex;
-      align-items: center;
-      margin: 10px 0;
-    }
-    .checklist-item input[type="checkbox"] {
-      margin-right: 10px;
-    }
-    .checklist-item label {
-      flex: 1;
-    }
-    .checklist-item input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #00f;
-      border-radius: 5px;
-    }
-    .checklist-item button {
-      background: #00f;
-      color: #fff;
-      padding: 8px 15px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-left: 10px;
-    }
-    .checklist-item button:hover {
-      background: #0055ff;
-    }
-    .checklist-item .greenlight-status {
-      color: #0f0;
-      margin-left: 10px;
-      font-size: 0.9em;
-    }
-    .launch-btn {
-      background: #f60;
-      color: #fff;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 1.1em;
-      font-weight: 700;
-      width: 100%;
-      margin-top: 20px;
-      transition: background 0.3s;
-    }
-    .launch-btn:hover {
-      background: #cc5200;
-    }
-    .launch-btn:disabled {
-      background: #555;
-      cursor: not-allowed;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      background: #000;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-    }
-    .social-links img {
-      width: 30px;
-      margin: 0 10px;
-    }
-    .chat-box {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      cursor: pointer;
-    }
-    .chat-box svg {
-      width: 50px;
-      height: 50px;
-    }
-    .notification-badge {
-      position: absolute;
-      top: -10px;
-      right: -10px;
-      background: #f00;
-      color: #fff;
-      border-radius: 50%;
-      padding: 5px 10px;
-      font-size: 0.8em;
-    }
-    .no-access-container {
-      background: #111;
-      padding: 40px;
-      border: 2px solid #00f;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00f;
-      text-align: center;
-      max-width: 600px;
-      margin: 40px auto;
-    }
-    .no-access-container h2 {
-      color: #f60;
-      margin-bottom: 20px;
-    }
-    .no-access-container p {
-      font-size: 1.1em;
-      margin-bottom: 30px;
-    }
-    .no-access-container a {
-      background: #00f;
-      color: #fff;
-      padding: 12px 20px;
-      margin: 0 10px;
-      text-decoration: none;
-      border-radius: 10px;
-      font-weight: 700;
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-    .no-access-container a:hover {
-      background: #0055ff;
-      box-shadow: 0 0 10px rgba(0, 85, 255, 0.7);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Chat - Crew Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-styles.css">
 </head>
 <body>
   <header>
@@ -631,5 +395,14 @@
 
     initializePage();
   </script>
+
+    <!-- Add shared functions -->
+    <script src="shared-functions.js"></script>
+    
+    <!-- Page-specific scripts -->
+    <script>
+        // ...existing JavaScript code...
+    </script>
 </body>
 </html>
+
