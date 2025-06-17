@@ -1,0 +1,10 @@
+/* shared-styles.css */
+:root {
+  --primary-color: #f60;
+  --secondary-color: #ff0066;
+  --background-gradient: linear-gradient(135deg, #1a0033, #330066, #4a00cc, #0066ff, #6600cc);
+}
+
+.crew-header { /* common header styles */ }
+.crew-nav { /* common nav styles */ }
+.crew-footer { /* common footer styles */ }
