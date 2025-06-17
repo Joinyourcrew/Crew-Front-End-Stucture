@@ -1,254 +1,552 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Join a Crew</title>
+  <title>Join Projects - Crew Platform</title>
   <link href="https://fonts.googleapis.com/css2?family=Avenir:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
-    body {
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
       font-family: 'Avenir', sans-serif;
-      background: linear-gradient(135deg, #6a0dad, #00f);
-      background-size: 200% 200%;
-      animation: gradientShift 15s ease infinite;
+      background: linear-gradient(135deg, #1a0033, #330066, #4a00cc, #0066ff, #6600cc);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease infinite;
       color: #fff;
+      overflow-x: hidden;
+      position: relative;
     }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    header {
-      display: flex;
-      align-items: center;
-      padding: 20px;
-      background: #000;
-    }
-    .logo-container {
-      display: flex;
-      align-items: center;
-    }
-    .logo-container svg {
-      width: 40px;
-      height: 40px;
-      margin-right: 10px;
-    }
-    nav {
-      margin-left: auto;
-    }
-    nav a {
-      color: #fff;
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    nav a:hover {
-      color: #f60;
-    }
-    .projects-section {
-      padding: 40px;
-    }
-    .project-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
-    }
-    .project-card {
-      background: #111;
-      padding: 20px;
-      border: 2px solid #00f;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00f;
-      transition: transform 0.3s;
-    }
-    .project-card:hover {
-      transform: scale(1.05);
-    }
-    .project-card img {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      margin-bottom: 10px;
-    }
-    .apply-btn {
-      background: #00f;
-      color: #fff;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: background 0.3s;
-    }
-    .apply-btn:hover {
-      background: #0055ff;
-    }
-    .modal {
-      display: none;
+
+    /* Animated background particles */
+    body::before {
+      content: '';
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      justify-content: center;
+      background-image: 
+        radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255, 102, 0, 0.4), transparent),
+        radial-gradient(1px 1px at 90px 40px, rgba(0, 255, 255, 0.3), transparent),
+        radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.2), transparent);
+      background-size: 200px 200px;
+      animation: float 30s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      25% { background-position: 100% 50%; }
+      50% { background-position: 100% 100%; }
+      75% { background-position: 0% 100%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      33% { transform: translateY(-30px) rotate(0.5deg); }
+      66% { transform: translateY(30px) rotate(-0.5deg); }
+    }
+
+    @keyframes glow {
+      0%, 100% { text-shadow: 0 0 20px rgba(255, 102, 0, 0.5); }
+      50% { text-shadow: 0 0 30px rgba(255, 102, 0, 0.8), 0 0 40px rgba(255, 102, 0, 0.3); }
+    }
+
+    header {
+      display: flex;
       align-items: center;
-      z-index: 1000;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 10;
     }
-    .modal-content {
-      background: #111;
-      padding: 30px;
-      border: 2px solid #00f;
-      border-radius: 15px;
-      width: 400px;
-      color: #fff;
-      box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      transition: transform 0.3s ease;
     }
-    .modal-content h2 {
-      margin: 0 0 20px;
-      color: #f60;
+
+    .logo-container:hover {
+      transform: scale(1.1);
     }
-    .modal-content label {
-      display: block;
-      text-align: left;
-      margin: 15px 0 5px;
+
+    .logo-container svg {
+      width: 40px;
+      height: 40px;
+      margin-right: 15px;
+      filter: drop-shadow(0 0 10px rgba(255, 102, 0, 0.5));
+    }
+
+    .logo-container h1 {
+      font-size: 1.8em;
       font-weight: 700;
+      background: linear-gradient(45deg, #fff, #f60, #00f);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glow 3s ease-in-out infinite;
     }
-    .modal-content select, .modal-content textarea {
-      width: 100%;
-      padding: 12px;
-      background: #222;
+
+    nav {
+      margin-left: auto;
+    }
+
+    nav a {
       color: #fff;
-      border: 1px solid #00f;
-      border-radius: 10px;
-      font-size: 1em;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-    .modal-content select:focus, .modal-content textarea:focus {
-      outline: none;
-      border-color: #f60;
-      box-shadow: 0 0 8px rgba(255, 102, 0, 0.5);
-    }
-    .modal-content textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-    .modal-content button {
-      background: #00f;
-      color: #fff;
-      padding: 12px;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-size: 1.1em;
-      font-weight: 700;
-      width: 100%;
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-    .modal-content button:hover {
-      background: #0055ff;
-      box-shadow: 0 0 10px rgba(0, 85, 255, 0.7);
-    }
-    .close-btn {
-      background: #f00;
-      color: #fff;
-      padding: 8px 15px;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      float: right;
-      font-size: 0.9em;
-      transition: background 0.3s;
-    }
-    .close-btn:hover {
-      background: #aa0000;
-    }
-    .link-modal-content {
-      text-align: center;
-    }
-    .link-modal-content a {
-      color: #00f;
+      margin: 0 20px;
       text-decoration: none;
       font-weight: 700;
-      transition: color 0.3s;
+      text-transform: uppercase;
+      position: relative;
+      transition: all 0.3s ease;
+      font-size: 0.9em;
+      letter-spacing: 1px;
     }
-    .link-modal-content a:hover {
+
+    nav a::before {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(45deg, #f60, #00f);
+      transition: width 0.3s ease;
+    }
+
+    nav a:hover {
       color: #f60;
+      transform: translateY(-2px);
     }
-    footer {
-      text-align: center;
-      padding: 20px;
-      background: #000;
-      position: fixed;
-      bottom: 0;
+
+    nav a:hover::before {
       width: 100%;
     }
-    .social-links img {
-      width: 30px;
-      margin: 0 10px;
+
+    .main-content {
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 5;
     }
+
+    .page-title {
+      text-align: center;
+      font-size: 3em;
+      margin-bottom: 20px;
+      color: #f60;
+      animation: glow 4s ease-in-out infinite;
+    }
+
+    .page-subtitle {
+      text-align: center;
+      font-size: 1.2em;
+      margin-bottom: 40px;
+      color: #ccc;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .search-section {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .search-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 300px;
+      padding: 15px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1em;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-input::placeholder {
+      color: #999;
+    }
+
+    .search-input:focus {
+      border-color: #f60;
+    }
+
+    .search-btn {
+      padding: 15px 30px;
+      background: linear-gradient(45deg, #f60, #ff0066);
+      border: none;
+      border-radius: 25px;
+      color: #fff;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .search-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .filters-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .filter-label {
+      color: #ccc;
+      font-weight: 700;
+    }
+
+    .filter-select {
+      padding: 8px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .filter-select option {
+      background: #000;
+      color: #fff;
+    }
+
+    .projects-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 25px;
+    }
+
+    .project-card {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #f60, #ff0066);
+    }
+
+    .project-card:hover {
+      transform: translateY(-5px);
+      border-color: #f60;
+      box-shadow: 0 10px 30px rgba(255, 102, 0, 0.2);
+    }
+
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+
+    .project-title {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #f60;
+      margin: 0;
+      flex: 1;
+    }
+
+    .project-status {
+      background: linear-gradient(45deg, #0f0, #00ff66);
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 0.75em;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .project-status.recruiting {
+      background: linear-gradient(45deg, #f60, #ff0066);
+      color: #fff;
+    }
+
+    .project-creator {
+      font-size: 0.9em;
+      color: #999;
+      margin-bottom: 15px;
+    }
+
+    .project-description {
+      font-size: 0.95em;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      color: #ccc;
+    }
+
+    .project-requirements {
+      margin-bottom: 20px;
+    }
+
+    .requirements-title {
+      font-size: 0.9em;
+      font-weight: 700;
+      color: #f60;
+      margin-bottom: 8px;
+    }
+
+    .requirements-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .requirement-tag {
+      background: rgba(255, 102, 0, 0.2);
+      color: #f60;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      border: 1px solid rgba(255, 102, 0, 0.3);
+    }
+
+    .project-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-size: 0.9em;
+    }
+
+    .meta-item {
+      text-align: center;
+    }
+
+    .meta-number {
+      font-weight: 700;
+      color: #f60;
+      display: block;
+    }
+
+    .meta-label {
+      color: #999;
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      font-family: inherit;
+      font-weight: 700;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9em;
+      flex: 1;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, #f60, #ff0066);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 102, 0, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-secondary:hover {
+      border-color: #f60;
+      color: #f60;
+    }
+
+    .application-status {
+      background: rgba(255, 255, 0, 0.2);
+      color: #ff0;
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 0.75em;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .application-status.applied {
+      background: rgba(0, 255, 0, 0.2);
+      color: #0f0;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-top: 40px;
+    }
+
+    .pagination-btn {
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pagination-btn:hover, .pagination-btn.active {
+      background: linear-gradient(45deg, #f60, #ff0066);
+      border-color: transparent;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 10;
+      margin-top: 50px;
+    }
+
+    .social-links {
+      margin-bottom: 20px;
+    }
+
+    .social-links img {
+      width: 40px;
+      height: 40px;
+      margin: 0 15px;
+      transition: all 0.3s ease;
+      filter: grayscale(100%);
+    }
+
+    .social-links img:hover {
+      filter: grayscale(0%) drop-shadow(0 0 10px rgba(255, 102, 0, 0.5));
+      transform: scale(1.2);
+    }
+
     .chat-box {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 30px;
+      right: 30px;
       cursor: pointer;
+      z-index: 1000;
+      transition: all 0.3s ease;
     }
+
+    .chat-box:hover {
+      transform: scale(1.1);
+    }
+
     .chat-box svg {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
+      filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
     }
+
     .notification-badge {
       position: absolute;
       top: -10px;
       right: -10px;
-      background: #f00;
+      background: linear-gradient(45deg, #ff0040, #ff6600);
       color: #fff;
       border-radius: 50%;
-      padding: 5px 10px;
+      padding: 8px 12px;
       font-size: 0.8em;
+      font-weight: 700;
+      animation: pulse 2s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(255, 0, 64, 0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .search-container {
+        flex-direction: column;
+      }
+      
+      .search-input {
+        min-width: auto;
+      }
+      
+      .projects-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .project-meta {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      nav a {
+        margin: 0 10px;
+        font-size: 0.8em;
+      }
     }
   </style>
 </head>
@@ -263,165 +561,272 @@
     <nav>
       <a href="/index.html">Home</a>
       <a href="/top-projects.html">Top Projects</a>
-      <a href="/join.html">Join</a>
+      <a href="/join.html" class="active">Join</a>
       <a href="/dream.html">Dream</a>
       <a href="/revive.html">Revive</a>
       <a href="/signup.html">Sign Up</a>
     </nav>
   </header>
-  <section class="projects-section">
-    <h2>Join a Project</h2>
-    <div class="project-grid" id="project-grid">
-      <div class="project-card">
-        <img src="https://via.placeholder.com/50" alt="Creator Profile">
-        <h3>DeFi Yield Farm</h3>
-        <p>Creator: @SolanaDev</p>
-        <p>A decentralized yield farming protocol on Solana.</p>
-        <p>Needed: Smart Contract Dev, UI Designer</p>
-        <button class="apply-btn" onclick="openApplyModal('1', 'Smart Contract Dev, UI Designer')">Apply</button>
+
+  <main class="main-content">
+    <h1 class="page-title">Join a Project</h1>
+    <p class="page-subtitle">Find your next Web3 collaboration opportunity and join innovative crypto projects on Solana</p>
+
+    <div class="search-section">
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search projects by title, description, or skills..." id="searchInput">
+        <button class="search-btn" onclick="searchProjects()">Search</button>
       </div>
-      <div class="project-card">
-        <img src="https://via.placeholder.com/50" alt="Creator Profile">
-        <h3>NFT Marketplace</h3>
-        <p>Creator: @CryptoArt</p>
-        <p>A platform for trading unique NFTs.</p>
-        <p>Needed: Backend Dev, Artist</p>
-        <button class="apply-btn" onclick="openApplyModal('2', 'Backend Dev, Artist')">Apply</button>
+      <div class="filters-row">
+        <div class="filter-group">
+          <span class="filter-label">Category:</span>
+          <select class="filter-select" id="categoryFilter" onchange="filterProjects()">
+            <option value="all">All Categories</option>
+            <option value="defi">DeFi</option>
+            <option value="nft">NFT</option>
+            <option value="gaming">Gaming</option>
+            <option value="dao">DAO</option>
+            <option value="infrastructure">Infrastructure</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Status:</span>
+          <select class="filter-select" id="statusFilter" onchange="filterProjects()">
+            <option value="all">All Status</option>
+            <option value="recruiting">Recruiting</option>
+            <option value="starting-soon">Starting Soon</option>
+            <option value="in-progress">In Progress</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Stage:</span>
+          <select class="filter-select" id="stageFilter" onchange="filterProjects()">
+            <option value="all">Any Stage</option>
+            <option value="idea">Idea Stage</option>
+            <option value="mvp">MVP Development</option>
+            <option value="testnet">Testnet</option>
+            <option value="mainnet">Mainnet Ready</option>
+          </select>
+        </div>
       </div>
     </div>
-  </section>
-  <div class="modal" id="apply-modal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeApplyModal()">Close</button>
-      <h2>Apply to Project</h2>
-      <form id="apply-form">
-        <label for="position">Position</label>
-        <select id="position" name="position" required>
-          <option value="">Select a position</option>
-        </select>
-        <label for="experience">Experience</label>
-        <textarea id="experience" name="experience" rows="4" required></textarea>
-        <button type="submit">Submit Application</button>
-      </form>
+
+    <div class="projects-container" id="projectsContainer">
+      <div class="project-card" data-category="defi" data-status="recruiting" data-stage="mvp">
+        <div class="project-header">
+          <h3 class="project-title">DeFi Yield Optimizer</h3>
+          <span class="project-status recruiting">Recruiting</span>
+        </div>
+        <div class="project-creator">Created by Alex Chen • 2 days ago</div>
+        <p class="project-description">
+          Building an automated yield farming protocol that optimizes returns across multiple Solana DeFi platforms. Looking for Rust developers and tokenomics experts.
+        </p>
+        <div class="project-requirements">
+          <div class="requirements-title">Looking for:</div>
+          <div class="requirements-list">
+            <span class="requirement-tag">Rust</span>
+            <span class="requirement-tag">Solana SDK</span>
+            <span class="requirement-tag">DeFi Protocols</span>
+            <span class="requirement-tag">Smart Contracts</span>
+          </div>
+        </div>
+        <div class="project-meta">
+          <div class="meta-item">
+            <span class="meta-number">3/6</span>
+            <span class="meta-label">Members</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-number">MVP Stage</span>
+            <span class="meta-label">Development</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-number">6 months</span>
+            <span class="meta-label">Timeline</span>
+          </div>
+        </div>
+        <div class="project-actions">
+          <a href="#" class="btn btn-primary" onclick="applyToProject(this)">Apply Now</a>
+          <a href="#" class="btn btn-secondary">Learn More</a>
+        </div>
+      </div>
+
+      <div class="project-card" data-category="nft" data-status="recruiting" data-stage="idea">
+        <div class="project-header">
+          <h3 class="project-title">Dynamic NFT Art Platform</h3>
+          <span class="project-status recruiting">Recruiting</span>
+        </div>
+        <div class="project-creator">Created by Maria Santos • 1 week ago</div>
+        <p class="project-description">
+          Creating NFTs that evolve based on on-chain data and user interactions. Building a marketplace for programmable art with Metaplex integration.
+        </p>
+        <div class="project-requirements">
+          <div class="requirements-title">Looking for:</div>
+          <div class="requirements-list">
+            <span class="requirement-tag">TypeScript</span>
+            <span class="requirement-tag">Metaplex</span>
+            <span class="requirement-tag">Digital Art</span>
+            <span class="requirement-tag">Web3.js</span>
+          </div>
+        </div>
+        <div class="project-meta">
+          <div class="meta-item">
+            <span class="meta-number">2/5</span>
+            <span class="meta-label">Members</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-number">Idea Stage</span>
+            <span class="meta-label">Development</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-number">4 months</span>
+            <span class="meta-label">Timeline</span>
+          </div>
+        </div>
+        <div class="project-actions">
+          <a href="#" class="btn btn-primary" onclick="applyToProject(this)">Apply Now</a>
+          <a href="#" class="btn btn-secondary">Learn More</a>
+        </div>
+      </div>
+
+      <div class="project-card" data-category="gaming" data-status="starting-soon" data-stage="testnet">
+        <div class="project-header">
+          <h3 class="project-title">On-Chain Battle Royale</h3>
+          <span class="application-status applied">Applied</span>
+        </div>
+        <div class="project-creator">Created by GameDAO • 3 days ago</div>
+        <p class="project-description">
+          First fully on-chain battle royale game with verifiable randomness and real-time state updates. NFT weapons and land ownership mechanics.
+        </p>
+        <div class="project-requirements">
+          <div class="requirements-title">Looking for:</div>
+          <div class="requirements-list">
+            <span class="requirement-tag">Game Development</span>
+            <span class="requirement-tag">Anchor Framework</span>
+            <span class="requirement-tag">Unity</span>
+            <span class="requirement-tag">Networking</span>
+          </div>
+        </div>
+        <div class="project-meta">
+          <div class="meta-item">
+            <span class="meta-number">4/8</span>
+            <span class="meta-label">Members</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-number">Testnet</span>
+            <span class="meta-label">Development</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-number">8 months</span>
+            <span class="meta-label">Timeline</span>
+          </div>
+        </div>
+        <div class="project-actions">
+          <a href="#" class="btn btn-secondary" style="width: 100%;">Application Pending</a>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="modal" id="link-modal">
-    <div class="modal-content link-modal-content">
-      <button class="close-btn" onclick="closeLinkModal()">Close</button>
-      <h2>Next Steps</h2>
-      <p>Join the project conversation!</p>
-      <a id="project-link" href="#" target="_blank">Visit Project Link</a>
+
+    <div class="pagination">
+      <button class="pagination-btn" disabled>‹ Previous</button>
+      <button class="pagination-btn active">1</button>
+      <button class="pagination-btn">2</button>
+      <button class="pagination-btn">3</button>
+      <button class="pagination-btn">Next ›</button>
     </div>
-  </div>
+  </main>
+
   <footer>
     <div class="social-links">
       <a href="https://x.com"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/x-twitter.svg" alt="X"></a>
       <a href="https://github.com"><img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/svgs/brands/github.svg" alt="GitHub"></a>
     </div>
-    © 2025 Crew Platform.
+    <p>© 2025 Crew Platform.</p>
   </footer>
-  <div class="chat-box" onclick="alert('Messages feature coming soon! Check your wallet details in notifications.')">
+
+  <div class="chat-box" onclick="alert('Messages feature coming soon!')">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#fff">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9-2-2-2V4c0-1.1-.9-2-2-2zm0 14h-4.7L12 19.3 8.7 16H4V4h16v12z"/>
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14h-4.7L12 19.3 8.7 16H4V4h16v12z"/>
     </svg>
     <span class="notification-badge" id="notification-count">0</span>
   </div>
-  <script>
-    let currentProjectId = null;
 
-    async function fetchProjects() {
-      try {
-        const response = await fetch('/api/projects');
-        const projects = await response.json();
-        const projectGrid = document.getElementById('project-grid');
-        projectGrid.innerHTML = projects.map(project => `
-          <div class="project-card">
-            <img src="${project.creatorProfilePic || 'https://via.placeholder.com/50'}" alt="Creator Profile">
-            <h3>${project.name}</h3>
-            <p>Creator: @${project.creatorXUsername}</p>
-            <p>${project.summary}</p>
-            <p>Needed: ${project.neededPositions.join(', ')}</p>
-            <button class="apply-btn" onclick="openApplyModal('${project._id}', '${project.neededPositions}')">Apply</button>
-          </div>
-        `).join('');
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-      }
+  <script>
+    function searchProjects() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.project-card');
+      
+      cards.forEach(card => {
+        const title = card.querySelector('.project-title').textContent.toLowerCase();
+        const description = card.querySelector('.project-description').textContent.toLowerCase();
+        const requirements = Array.from(card.querySelectorAll('.requirement-tag')).map(tag => tag.textContent.toLowerCase()).join(' ');
+        
+        if (title.includes(searchTerm) || description.includes(searchTerm) || requirements.includes(searchTerm)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
     }
+
+    function filterProjects() {
+      const category = document.getElementById('categoryFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const stage = document.getElementById('stageFilter').value;
+      const cards = document.querySelectorAll('.project-card');
+      
+      cards.forEach(card => {
+        let show = true;
+        
+        if (category !== 'all' && !card.dataset.category.includes(category)) {
+          show = false;
+        }
+        if (status !== 'all' && !card.dataset.status.includes(status)) {
+          show = false;
+        }
+        if (stage !== 'all' && !card.dataset.stage.includes(stage)) {
+          show = false;
+        }
+        
+        card.style.display = show ? 'block' : 'none';
+      });
+    }
+
+    function applyToProject(button) {
+      const card = button.closest('.project-card');
+      const actions = card.querySelector('.project-actions');
+      
+      // Simulate application
+      actions.innerHTML = '<a href="#" class="btn btn-secondary" style="width: 100%;">Application Sent!</a>';
+      
+      // Show confirmation
+      setTimeout(() => {
+        actions.innerHTML = '<a href="#" class="btn btn-secondary" style="width: 100%;">Application Pending</a>';
+        const header = card.querySelector('.project-header');
+        const statusElement = header.querySelector('.project-status, .application-status');
+        if (statusElement) {
+          statusElement.className = 'application-status applied';
+          statusElement.textContent = 'Applied';
+        }
+      }, 1500);
+    }
+
+    // Search on Enter key
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchProjects();
+      }
+    });
 
     async function fetchUnreadMessages() {
       try {
-        const response = await fetch('/api/messages/unread', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` }
-        });
+        const response = await fetch('/api/messages/unread');
         const { count } = await response.json();
         document.getElementById('notification-count').textContent = count;
       } catch (error) {
         console.error('Error fetching unread messages:', error);
       }
     }
-
-    function openApplyModal(projectId, positions) {
-      if (!localStorage.getItem('jwtToken')) {
-        alert('Please sign in to apply.');
-        window.location.href = '/signup.html';
-        return;
-      }
-      currentProjectId = projectId;
-      const positionSelect = document.getElementById('position');
-      positionSelect.innerHTML = '<option value="">Select a position</option>' + 
-        positions.split(', ').map(pos => `<option value="${pos}">${pos}</option>`).join('');
-      document.getElementById('apply-modal').style.display = 'flex';
-    }
-
-    function closeApplyModal() {
-      document.getElementById('apply-modal').style.display = 'none';
-      currentProjectId = null;
-    }
-
-    function openLinkModal(link) {
-      document.getElementById('project-link').href = link;
-      document.getElementById('project-link').textContent = link;
-      document.getElementById('link-modal').style.display = 'flex';
-    }
-
-    function closeLinkModal() {
-      document.getElementById('link-modal').style.display = 'none';
-    }
-
-    document.getElementById('apply-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const position = document.getElementById('position').value;
-      const experience = document.getElementById('experience').value;
-      if (!position || !experience) {
-        alert('Please fill out all fields.');
-        return;
-      }
-      try {
-        const response = await fetch('/api/projects/apply', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
-          },
-          body: JSON.stringify({ projectId: currentProjectId, position, experience })
-        });
-        if (response.ok) {
-          const { link } = await response.json();
-          closeApplyModal();
-          openLinkModal(link);
-          fetchUnreadMessages();
-        } else {
-          alert('Error submitting application.');
-        }
-      } catch (error) {
-        console.error('Error submitting application:', error);
-        alert('Error submitting application.');
-      }
-    });
-
-    // Comment out fetchProjects() to keep sample projects for now
-    // fetchProjects();
+    
     fetchUnreadMessages();
   </script>
 </body>
